@@ -15,26 +15,26 @@ func Route() *gin.Engine {
 
 	router.StaticFS("/ui", http.Dir("vue/dist"))
 
-	rapi := router.Group("/api")
+	rapi := router.Group("api")
 	rapi.Use(
 		apihelpers.ApplyAPIHeader,
 		middlewares.VerifyUserToken,
 	)
 	{
-		rapi1 := rapi.Group("/v1")
+		rapi1 := rapi.Group("v1")
 		{
 			rapi1.GET("auth", api1.AuthenticateUserHandler)
 			rapi1.GET("register", api1.RegisterUserHandler)
 			rapi1.GET("profile", api1.GetProfileHandler)
 		}
 	}
-	rws := router.Group("/ws")
+	rws := router.Group("ws")
 	rws.Use(
 		middlewares.VerifyUserToken,
 		middlewares.UpgradeToWebSocket,
 	)
 	{
-		rws1 := rws.Group("/v1")
+		rws1 := rws.Group("v1")
 		{
 			rws1.Any("match", ws1.MatchHandler)
 		}
