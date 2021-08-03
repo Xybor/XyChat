@@ -9,4 +9,5 @@ type APIResponse struct {
 
 func ApplyAPIHeader(c *gin.Context) {
 	c.Writer.Header().Add("Content-Type", "application/json")
+	c.Writer.Header().Add("Access-Control-Allow-Origin", "*")
 }
