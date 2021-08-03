@@ -1,4 +1,4 @@
-package apihelpers
+package controllers
 
 import (
 	"errors"

@@ -4,27 +4,27 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
-	ctr "github.com/xybor/xychat/controllers"
+	ctrl "github.com/xybor/xychat/controllers"
 	"github.com/xybor/xychat/helpers/tokens"
 )
 
 func VerifyUserToken(c *gin.Context) {
-	ctr.SetReceivingMethod(ctr.GET)
+	ctrl.SetReceivingMethod(ctrl.GET)
 
 	// token, err := c.Cookie("auth")
-	token, err := ctr.GetParam(c, "token")
+	token, err := ctrl.GetParam(c, "token")
 
 	if err != nil {
 		return
 	}
 
-	ut := tokens.UserToken{}
+	userToken := tokens.CreateUserToken(0, 0)
 
-	err = ut.Validate(token)
+	err = userToken.Validate(token)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	c.Set("UID", ut.ID)
+	c.Set("UID", userToken.GetUID())
 }

@@ -2,22 +2,38 @@ package routers
 
 import (
 	"github.com/gin-gonic/gin"
+	api1 "github.com/xybor/xychat/controllers/api/v1"
+	ws1 "github.com/xybor/xychat/controllers/ws/v1"
 	apihelpers "github.com/xybor/xychat/helpers/api"
-	ctr1 "github.com/xybor/xychat/controllers/api/v1"
 	"github.com/xybor/xychat/middlewares"
 )
 
 func Route() *gin.Engine {
 	router := gin.Default()
-	router.Use(apihelpers.ApplyAPIHeader)
 
-	r1 := router.Group("/api/v1")
-	r1.Use(middlewares.VerifyUserToken)
+	rapi := router.Group("api")
+	rapi.Use(
+		apihelpers.ApplyAPIHeader,
+		middlewares.VerifyUserToken,
+	)
 	{
-		r1.GET("auth", ctr1.AuthenticateUserHandler)
-		r1.GET("register", ctr1.RegisterUserHandler)
-		r1.GET("profile", ctr1.GetProfileHandler)
+		rapi1 := rapi.Group("v1")
+		{
+			rapi1.GET("auth", api1.AuthenticateUserHandler)
+			rapi1.GET("register", api1.RegisterUserHandler)
+			rapi1.GET("profile", api1.GetProfileHandler)
+		}
 	}
-
+	rws := router.Group("/ws")
+	rws.Use(
+		middlewares.VerifyUserToken,
+		middlewares.UpgradeToWebSocket,
+	)
+	{
+		rws1 := rws.Group("/v1")
+		{
+			rws1.Any("match", ws1.MatchHandler)
+		}
+	}
 	return router
 }

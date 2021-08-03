@@ -1,10 +1,13 @@
 package models
 
-import "github.com/jinzhu/gorm"
+import "gorm.io/gorm"
 
 type User struct {
 	gorm.Model
-	Username *string `gorm:"type:varchar(30);unique;not null"`
-	Password *string `gorm:"type:varchar(30);not null"`
-	Role     *string `gorm:"not null"`
+	Username *string `gorm:"unique;not null"`
+	Password *string `gorm:"not null"`
+	Role     *string `gorm:"not null;check:role in ('member', 'mod', 'admin')"`
+	Age      *int
+	Gender   *string `gorm:"check:gender in ('male', 'female', 'gay', 'les', 'other')"`
+	Rooms    []*Room `gorm:"many2many:detailed_rooms"`
 }

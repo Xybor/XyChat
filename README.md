@@ -1,4 +1,4 @@
-# CyberCom
+# XyChat
 A API-base chat application at server-side
 
 # REQUIREMENTS

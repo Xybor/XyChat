@@ -9,13 +9,13 @@ import (
 	"github.com/xybor/xychat/helpers"
 )
 
-type UserToken struct {
-	ID         uint
-	Expiration time.Duration
+type userToken struct {
+	uid        uint
+	expiration time.Duration
 }
 
-type UserTokenClaims struct {
-	ID uint `json:"id"`
+type userTokenClaims struct {
+	UID uint `json:"id"`
 	*jwt.StandardClaims
 }
 
@@ -26,12 +26,20 @@ func getSecret(token *jwt.Token) (interface{}, error) {
 	return secret, nil
 }
 
-func (ut UserToken) Create() (string, error) {
-	claims := UserTokenClaims{
-		ID: ut.ID,
+func CreateUserToken(id uint, expiration time.Duration) userToken {
+	return userToken{uid: id, expiration: expiration}
+}
+
+func (ut userToken) GetUID() uint {
+	return ut.uid
+}
+
+func (ut userToken) Generate() (string, error) {
+	claims := userTokenClaims{
+		UID: ut.uid,
 		StandardClaims: &jwt.StandardClaims{
 			Audience:  "Xybor",
-			ExpiresAt: time.Now().Add(ut.Expiration).Unix(),
+			ExpiresAt: time.Now().Add(ut.expiration).Unix(),
 			IssuedAt:  time.Now().Unix(),
 			Issuer:    "Xychat",
 		},
@@ -48,8 +56,8 @@ func (ut UserToken) Create() (string, error) {
 	return signedToken, err
 }
 
-func (ut *UserToken) Validate(signedToken string) error {
-	claims := UserTokenClaims{}
+func (ut *userToken) Validate(signedToken string) error {
+	claims := userTokenClaims{}
 	_, err := jwt.ParseWithClaims(
 		signedToken,
 		&claims,
@@ -66,7 +74,7 @@ func (ut *UserToken) Validate(signedToken string) error {
 		return errors.New("token is expired")
 	}
 
-	ut.ID = claims.ID
+	ut.uid = claims.UID
 
 	return nil
 }
