@@ -36,7 +36,7 @@ func RegisterUserHandler(c *gin.Context) {
 	if err != nil {
 		log.Println(err)
 		response := apihelper.NewAPIError(ctrl.FailedProcess, "registration failed")
-		c.JSON(http.StatusUnauthorized, response)
+		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
 

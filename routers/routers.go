@@ -1,6 +1,8 @@
 package routers
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	api1 "github.com/xybor/xychat/controllers/api/v1"
 	ws1 "github.com/xybor/xychat/controllers/ws/v1"
@@ -11,13 +13,15 @@ import (
 func Route() *gin.Engine {
 	router := gin.Default()
 
-	rapi := router.Group("api")
+	router.StaticFS("/ui", http.Dir("vue/dist"))
+
+	rapi := router.Group("/api")
 	rapi.Use(
 		apihelpers.ApplyAPIHeader,
 		middlewares.VerifyUserToken,
 	)
 	{
-		rapi1 := rapi.Group("v1")
+		rapi1 := rapi.Group("/v1")
 		{
 			rapi1.GET("auth", api1.AuthenticateUserHandler)
 			rapi1.GET("register", api1.RegisterUserHandler)
