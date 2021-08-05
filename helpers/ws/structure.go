@@ -5,6 +5,9 @@ type WSResponse struct {
 	Meta *map[string]interface{} `json:"meta,omitempty"`
 }
 
+// CreateWSResponse is a constructor for create an WS response.  WSResponse is
+// a struct with two field: data (store the WS's result) and meta (store the
+// WS's metadata)
 func CreateWSResponse(
 	data *interface{},
 	meta *map[string]interface{},

@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// The wsClient is responsible for managing a websocket connection.
 type wsClient struct {
 	conn         *websocket.Conn
 	send         chan interface{}
@@ -13,6 +14,17 @@ type wsClient struct {
 	CloseHandler func()
 }
 
+// Create a wsClient struct with the provided websocket connection.  It runs 
+// two goroutines for reading and writing flows.
+//
+// The wsClient.readFlow reads all messages from client and passes them into
+// wsClient.ReadHandler function.
+//
+// The wsClient.writeFlow receives message from wsClient.send channel and sends
+// it to the client.  The message passed to wsClient.send channel should be a
+// struct or map[string]interface{}.
+//
+// Before wsClient.readFlow finishes, it call wsClient.CloseHandler function.
 func CreateWSClient(conn *websocket.Conn) wsClient {
 	wsc := wsClient{
 		conn:        conn,
@@ -26,7 +38,7 @@ func CreateWSClient(conn *websocket.Conn) wsClient {
 	return wsc
 }
 
-func (wsc wsClient) readFlow() {
+func (wsc *wsClient) readFlow() {
 	defer wsc.conn.Close()
 
 	for {
@@ -51,10 +63,11 @@ func (wsc wsClient) readFlow() {
 	wsc.CloseHandler()
 }
 
-func (wsc wsClient) writeFlow() {
+func (wsc *wsClient) writeFlow() {
 	defer wsc.conn.Close()
 
 	for {
+		// The received message should be a struct or map.
 		msg, ok := <-wsc.send
 		if !ok {
 			break
@@ -68,11 +81,14 @@ func (wsc wsClient) writeFlow() {
 	}
 }
 
-func (wsc wsClient) WriteJSON(data interface{}) {
+// WriteJSON send a message to wsClient.writeFlow via wsClient.send, the
+// message should be a struct or map[string]interface{}
+func (wsc *wsClient) WriteJSON(data interface{}) {
 	wsc.send <- data
 }
 
-func (wsc wsClient) Close() {
+// Close closes the connection and wsClient.send channel.
+func (wsc *wsClient) Close() {
 	close(wsc.send)
 	wsc.conn.Close()
 }

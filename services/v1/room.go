@@ -8,10 +8,12 @@ type roomService struct {
 	id *uint
 }
 
+// CreateRoomService creates a roomService struct with given roomid.
 func CreateRoomService(id *uint) roomService {
 	return roomService{id: id}
 }
 
+// Create creates a room and assigns roomid to this roomService.
 func (rs *roomService) Create() error {
 	db := models.GetDB()
 

@@ -1,7 +1,6 @@
 package helpers
 
 import (
-	"errors"
 	"log"
 
 	"github.com/joho/godotenv"
@@ -9,6 +8,7 @@ import (
 
 var env map[string]string
 
+// LoadEnv reads .env file and loads all variables as environment variables.
 func LoadEnv() {
 	e, err := godotenv.Read()
 	if err != nil {
@@ -18,6 +18,8 @@ func LoadEnv() {
 	env = e
 }
 
+// ReadEnv reads an environment variable with a default value if it doesn't
+// exist.
 func ReadEnv(key string, _default string) string {
 	value, ok := env[key]
 	if !ok {
@@ -26,11 +28,13 @@ func ReadEnv(key string, _default string) string {
 	return value
 }
 
-func MustReadEnv(key string) (string, error) {
+// MustReadEnv reads an environment variable and calls log.Panic if it doesn't
+// exist.
+func MustReadEnv(key string) string {
 	value, ok := env[key]
 	if !ok {
-		return "", errors.New("KeyError: " + key)
+		log.Panic("invalid key " + key)
 	}
 
-	return value, nil
+	return value
 }

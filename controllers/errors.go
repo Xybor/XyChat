@@ -3,10 +3,12 @@ package controllers
 const (
 	NoError = 0
 
-	LackOfInput = 100
+	ErrorInput = 100
+	ErrorLackOfInput = 101
+	ErrorInvalidInput = 102
 
-	FailedProcess = 200
-	DuplicatedConnection = 201
+	ErrorFailedProcess = 200
+	ErrorDuplicatedConnection = 201
 
-	Unauthenticated = 300
+	ErrorUnauthenticated = 300
 )

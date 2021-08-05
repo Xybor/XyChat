@@ -4,21 +4,24 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
-	ctrl "github.com/xybor/xychat/controllers"
+	"github.com/xybor/xychat/helpers/context"
 	"github.com/xybor/xychat/helpers/tokens"
 )
 
-func VerifyUserToken(c *gin.Context) {
-	ctrl.SetReceivingMethod(ctrl.GET)
+// VerifyUserToken finds the token in incoming request and validates it.  If
+// there is a valid token, it will set the token's id as a parameter UID in the
+// context;
+func VerifyUserToken(ctx *gin.Context) {
+	context.SetRetrievingMethod(context.GET)
 
 	// token, err := c.Cookie("auth")
-	token, err := ctrl.GetParam(c, "token")
+	token, err := context.RetrieveQuery(ctx, "token")
 
 	if err != nil {
 		return
 	}
 
-	userToken := tokens.CreateUserToken(0, 0)
+	userToken := tokens.CreateEmptyUserToken()
 
 	err = userToken.Validate(token)
 	if err != nil {
@@ -26,5 +29,6 @@ func VerifyUserToken(c *gin.Context) {
 		return
 	}
 
-	c.Set("UID", userToken.GetUID())
+	id := userToken.GetUID()
+	ctx.Set("UID", id)
 }

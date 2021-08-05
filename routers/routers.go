@@ -6,28 +6,51 @@ import (
 	"github.com/gin-gonic/gin"
 	api1 "github.com/xybor/xychat/controllers/api/v1"
 	ws1 "github.com/xybor/xychat/controllers/ws/v1"
-	apihelpers "github.com/xybor/xychat/helpers/api"
+	"github.com/xybor/xychat/helpers/context"
 	"github.com/xybor/xychat/middlewares"
+	mdwv1 "github.com/xybor/xychat/middlewares/v1"
 )
 
+// Route combines middlewares and controllers to handle given url paths in the
+// application.
 func Route() *gin.Engine {
 	router := gin.Default()
+
+	router.Use(middlewares.ApplyCORSHeader)
 
 	router.StaticFS("/ui", http.Dir("vue/dist"))
 
 	rapi := router.Group("api")
 	rapi.Use(
-		apihelpers.ApplyAPIHeader,
 		middlewares.VerifyUserToken,
+		middlewares.ApplyAPIHeader,
 	)
 	{
 		rapi1 := rapi.Group("v1")
 		{
-			rapi1.GET("auth", api1.AuthenticateUserHandler)
-			rapi1.GET("register", api1.RegisterUserHandler)
-			rapi1.GET("profile", api1.GetProfileHandler)
+			rapi1.GET("auth",
+				mdwv1.MustHaveQueryParam(context.GET, "username", "password"),
+				api1.UserAuthenticateHandler,
+			)
+			rapi1.GET("register",
+				mdwv1.MustHaveQueryParam(context.GET, "username", "password"),
+				api1.UserRegisterHandler,
+			)
+			rapi1.GET("profile", api1.UserProfileHandler)
+
+			rapi1.GET("users/:id", api1.UserGETHandler)
+			rapi1.PUT("users/:id", api1.UserPUTHandler)
+			rapi1.PUT("users/:id/role",
+				mdwv1.MustHaveQueryParam(context.GET, "role"),
+				api1.UserChangeRoleHandler,
+			)
+			rapi1.PUT("users/:id/password",
+				mdwv1.MustHaveQueryParam(context.GET, "newpassword"),
+				api1.UserChangePasswordHandler,
+			)
 		}
 	}
+
 	rws := router.Group("ws")
 	rws.Use(
 		middlewares.VerifyUserToken,
@@ -36,8 +59,9 @@ func Route() *gin.Engine {
 	{
 		rws1 := rws.Group("v1")
 		{
-			rws1.Any("match", ws1.MatchHandler)
+			rws1.GET("match", ws1.MatchHandler)
 		}
 	}
+
 	return router
 }

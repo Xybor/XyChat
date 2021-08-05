@@ -14,14 +14,17 @@ import (
 
 var db *gorm.DB
 
-func Initialize() {
+// IntializeDB reads all credentials in environments variable and creates a
+// connection to the DB.  It also creates a logs directory and a log file to
+// save all errors in the application.
+func InitializeDB() {
 	var err error
 
-	postgres_host := helpers.ReadEnv("postgres_host", "localhost")
-	postgres_user := helpers.ReadEnv("postgres_user", "postgres")
-	postgres_dbname := helpers.ReadEnv("postgres_dbname", "xychat")
-	postgres_port := helpers.ReadEnv("postgres_port", "5432")
-	postgres_password := helpers.ReadEnv("postgres_password", "pwd")
+	postgres_host := helpers.MustReadEnv("postgres_host")
+	postgres_user := helpers.MustReadEnv("postgres_user")
+	postgres_dbname := helpers.MustReadEnv("postgres_dbname")
+	postgres_port := helpers.MustReadEnv("postgres_port")
+	postgres_password := helpers.MustReadEnv("postgres_password")
 
 	dsn := fmt.Sprintf("host=%s user=%s dbname=%s port=%s sslmode=disable password=%s",
 		postgres_host,
@@ -30,7 +33,6 @@ func Initialize() {
 		postgres_port,
 		postgres_password,
 	)
-	fmt.Println(dsn)
 
 	_, err = os.Stat("logs")
 	if os.IsNotExist(err) {
@@ -44,7 +46,7 @@ func Initialize() {
 	)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	newLogger := logger.New(
@@ -63,26 +65,29 @@ func Initialize() {
 		},
 	)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	sqldb, err := db.DB()
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	err = sqldb.Ping()
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
-	fmt.Println("[CHAT] Connecting to database success")
+	fmt.Println("[Xychat] Connecting to database success")
 }
 
+// Get the current db struct
 func GetDB() *gorm.DB {
 	return db
 }
 
+// CreateTables will AutoMigrate all tables in application.  If drop_if_exists
+// is set to true, it will drop all tables before creating.
 func CreateTables(drop_if_exists bool) {
 	if drop_if_exists {
 		err := db.Migrator().DropTable(
@@ -95,6 +100,8 @@ func CreateTables(drop_if_exists bool) {
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		log.Println("[Xychat] Dropped all tables in database")
 	}
 
 	err := db.AutoMigrate(
@@ -107,4 +114,6 @@ func CreateTables(drop_if_exists bool) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	log.Println("[Xychat] Successfully auto-migrate database")
 }

@@ -6,16 +6,32 @@ A chat application built with Golang, VueJS, and PostgreSQL.
 + PostgreSQL
 
 # INSTALLATION
-+ Modify `.env` file with your database credentials ('postgres_*').
-+ Create a database with the same name in your PostgreSQL.
++ Create a database in your PostgreSQL.
++ Create and modify `.env` file (with the same structure as [.env.example](.env.example)).
 
 # USAGE
-Run the command in terminal or command line
+Run the following command in terminal for more detail
+```shell
+$ go run main.go -h
 ```
-$ go run .
+
+## Some examples
+Reset the database
+```shell
+$ go run main.go -reset
 ```
-Then open your browser, request the API by using following URLs 
-`http://localhost:1999/ui/`
+
+Create an admin account
+```shell
+$ go run main.go -admin root:p@ss
+```
+
+Run the application
+```shell
+$ go run main.go -run
+```
+
+Then open your browser and access the web at `http://domain:port/ui/`. Example: `http://localhost:1999/ui`.
 
 # DOCKER
 
