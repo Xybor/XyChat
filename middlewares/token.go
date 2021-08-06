@@ -1,8 +1,6 @@
 package middlewares
 
 import (
-	"log"
-
 	"github.com/gin-gonic/gin"
 	"github.com/xybor/xychat/helpers/context"
 	"github.com/xybor/xychat/helpers/tokens"
@@ -25,7 +23,6 @@ func VerifyUserToken(ctx *gin.Context) {
 
 	err = userToken.Validate(token)
 	if err != nil {
-		log.Println(err)
 		return
 	}
 

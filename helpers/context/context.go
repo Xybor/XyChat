@@ -25,7 +25,7 @@ var method = GET
 // If the method is POST, the parameter should be get by ctx.GetPostForm().
 func SetRetrievingMethod(m string) {
 	if m != GET && m != POST {
-		log.Fatal("invalid receiving method")
+		log.Fatalln("invalid receiving method: " + m)
 	}
 
 	method = m
@@ -97,7 +97,7 @@ func MustRetrieveQuery(ctx *gin.Context, key string) string {
 	value, err := RetrieveQuery(ctx, key)
 
 	if err != nil {
-		log.Panic(err)
+		log.Panicln(err)
 	}
 
 	return value

@@ -83,7 +83,7 @@ func (ut *userToken) Validate(signedToken string) error {
 	)
 
 	if err != nil {
-		log.Print(err)
+		log.Println(err)
 		return ErrorInvalidToken
 	}
 

@@ -19,8 +19,8 @@ func SeedAdminUser(username, password string) {
 	).Error
 
 	if err != nil {
-		log.Fatal("Cannot create admin user: " + err.Error())
+		log.Panicf("Cannot create admin user: %s\n", err.Error())
 	}
 
-	log.Println("[Xychat] Successfully create user " + username + ":" + password)
+	log.Printf("[Xychat] Successfully create user %s:%s\n", username, password)
 }

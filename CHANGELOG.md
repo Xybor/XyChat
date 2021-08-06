@@ -1,6 +1,6 @@
 # Change logs
 # Alpha.0.0.4
-+ Modify some code in [services](./services) and [controllers](./controllers).
++ Modify some codes in [services](./services) and [controllers](./controllers).
 + Move controllers/debug.go to helpers/context/context.go.
 + Add some GET and PUT APIs in `/api/v1/users/:id/*`.
 + Add FEATURES.md for listing all APIs and WSes in the application.
@@ -9,6 +9,7 @@
 + Add admin user seeder in command line.
 + Add many comments.
 + Change the loading environment variable method.
++ Use a correct exiting way by using fatal or panic.
 
 # Alpha.0.0.3
 + Add frontend with VueJS

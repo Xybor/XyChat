@@ -95,13 +95,13 @@ func (q *matchQueue) match() {
 		}
 
 		if client1 != nil && client2 != nil {
-			rs := roomService{}
+			rservice := roomService{}
 
 			var ID uint = 0
-			if err := rs.Create(); err != nil {
+			if err := rservice.Create(); err != nil {
 				log.Println(err)
 			} else {
-				ID = *rs.id
+				ID = *rservice.id
 			}
 
 			client1.joinRoom <- ID

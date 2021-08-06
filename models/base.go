@@ -65,17 +65,17 @@ func InitializeDB() {
 		},
 	)
 	if err != nil {
-		log.Panic(err)
+		log.Panicln(err)
 	}
 
 	sqldb, err := db.DB()
 	if err != nil {
-		log.Panic(err)
+		log.Panicln(err)
 	}
 
 	err = sqldb.Ping()
 	if err != nil {
-		log.Panic(err)
+		log.Panicln(err)
 	}
 
 	fmt.Println("[Xychat] Connecting to database success")
@@ -98,7 +98,7 @@ func CreateTables(drop_if_exists bool) {
 		)
 
 		if err != nil {
-			log.Fatal(err)
+			log.Panicln(err)
 		}
 
 		log.Println("[Xychat] Dropped all tables in database")
@@ -112,7 +112,7 @@ func CreateTables(drop_if_exists bool) {
 	)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Panicln(err)
 	}
 
 	log.Println("[Xychat] Successfully auto-migrate database")

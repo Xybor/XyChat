@@ -30,7 +30,7 @@ func main() {
 	if *admin != "" {
 		credentials := strings.Split(*admin, ":")
 		if len(credentials) != 2 {
-			log.Fatal("Invalid admin credentials")
+			log.Fatalln("Invalid admin credentials")
 		}
 		seeds.SeedAdminUser(credentials[0], credentials[1])
 	}
