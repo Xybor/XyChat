@@ -8,6 +8,7 @@
 + Add command line option to build the application easily.
 + Add admin user seeder in command line.
 + Add many comments.
++ Change the loading environment variable method.
 
 # Alpha.0.0.3
 + Add frontend with VueJS

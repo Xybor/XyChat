@@ -7,7 +7,8 @@ A chat application built with Golang, VueJS, and PostgreSQL.
 
 # INSTALLATION
 + Create a database in your PostgreSQL.
-+ Create and modify `.env` file (with the same structure as [.env.example](.env.example)).
++ Create and modify `.env` file (with the same structure as [.env.example](.env.example)). The
+other way is that create environment variables in your machine with the same names as [.env.example](.env.example).
 
 # USAGE
 Run the following command in terminal for more detail
@@ -24,6 +25,11 @@ $ go run main.go -reset
 Create an admin account
 ```shell
 $ go run main.go -admin root:p@ss
+```
+
+Use values in .env file instead of environment variables
+```shell
+$ go run main.go -dotenv
 ```
 
 Run the application
