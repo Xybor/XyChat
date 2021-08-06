@@ -1,1 +1,1 @@
-web: /bin/xychat -run
+web: ./bin/xychat -run
