@@ -16,10 +16,13 @@ func main() {
 	reset := flag.Bool("reset", false, "Drop all tables before auto-migrating")
 	admin := flag.String("admin", "", "Create an admin user with format username:password")
 	run := flag.Bool("run", false, "Run the server")
+	dotenv := flag.Bool("dotenv", false, "Load environment variables from .env file")
 
 	flag.Parse()
 
-	helpers.LoadEnv()
+	if *dotenv {
+		helpers.LoadEnv()
+	}
 
 	models.InitializeDB()
 	models.CreateTables(*reset)
