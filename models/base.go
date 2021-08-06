@@ -44,13 +44,13 @@ func InitializeDB() {
 
 	_, err = os.Stat("logs")
 	if os.IsNotExist(err) {
-		os.Mkdir("logs", 0600)
+		os.Mkdir("logs", 0777)
 	}
 
 	out, err := os.OpenFile(
 		"logs/db.log",
 		os.O_CREATE|os.O_APPEND|os.O_WRONLY,
-		0600,
+		0777,
 	)
 
 	if err != nil {
