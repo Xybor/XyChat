@@ -22,16 +22,16 @@ func InitializeDB() {
 
 	var dsn string
 
-	dsnEnvVarName, err := helpers.ReadEnv("dsn_name")
+	dsnEnvVarName, err := helpers.ReadEnv("DSN_NAME")
 
 	if err == nil {
 		dsn = helpers.MustReadEnv(dsnEnvVarName)
 	} else {
-		postgres_host := helpers.MustReadEnv("postgres_host")
-		postgres_user := helpers.MustReadEnv("postgres_user")
-		postgres_dbname := helpers.MustReadEnv("postgres_dbname")
-		postgres_port := helpers.MustReadEnv("postgres_port")
-		postgres_password := helpers.MustReadEnv("postgres_password")
+		postgres_host := helpers.MustReadEnv("POSTGRES_HOST")
+		postgres_user := helpers.MustReadEnv("POSTGRES_USER")
+		postgres_dbname := helpers.MustReadEnv("POSTGRES_DBNAME")
+		postgres_port := helpers.MustReadEnv("POSTGRES_PORT")
+		postgres_password := helpers.MustReadEnv("POSTGRES_PASSWORD")
 
 		dsn = fmt.Sprintf("host=%s user=%s dbname=%s port=%s sslmode=disable password=%s",
 			postgres_host,

@@ -39,6 +39,6 @@ func main() {
 		servicev1.InitializeMatchQueue()
 
 		router := routers.Route()
-		router.Run(":" + helpers.MustReadEnv("port"))
+		router.Run(":" + helpers.MustReadEnv("PORT"))
 	}
 }
