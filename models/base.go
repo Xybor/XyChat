@@ -20,19 +20,27 @@ var db *gorm.DB
 func InitializeDB() {
 	var err error
 
-	postgres_host := helpers.MustReadEnv("postgres_host")
-	postgres_user := helpers.MustReadEnv("postgres_user")
-	postgres_dbname := helpers.MustReadEnv("postgres_dbname")
-	postgres_port := helpers.MustReadEnv("postgres_port")
-	postgres_password := helpers.MustReadEnv("postgres_password")
+	var dsn string
 
-	dsn := fmt.Sprintf("host=%s user=%s dbname=%s port=%s sslmode=disable password=%s",
-		postgres_host,
-		postgres_user,
-		postgres_dbname,
-		postgres_port,
-		postgres_password,
-	)
+	dsnEnvVarName, err := helpers.ReadEnv("dsn_name")
+
+	if err == nil {
+		dsn = helpers.MustReadEnv(dsnEnvVarName)
+	} else {
+		postgres_host := helpers.MustReadEnv("postgres_host")
+		postgres_user := helpers.MustReadEnv("postgres_user")
+		postgres_dbname := helpers.MustReadEnv("postgres_dbname")
+		postgres_port := helpers.MustReadEnv("postgres_port")
+		postgres_password := helpers.MustReadEnv("postgres_password")
+
+		dsn = fmt.Sprintf("host=%s user=%s dbname=%s port=%s sslmode=disable password=%s",
+			postgres_host,
+			postgres_user,
+			postgres_dbname,
+			postgres_port,
+			postgres_password,
+		)
+	}
 
 	_, err = os.Stat("logs")
 	if os.IsNotExist(err) {

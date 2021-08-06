@@ -26,9 +26,15 @@ type userTokenClaims struct {
 
 // getSecret reads token_secret from environment variables.
 func getSecret(token *jwt.Token) (interface{}, error) {
-	secret_string := helpers.ReadEnv("token_secret", "1ns3cur3t0k3n")
+	insecureSecret := "1n53cur37@k3n"
+	secretString, err := helpers.ReadEnv("token_secret")
+	if err != nil {
+		secretString = insecureSecret
+		log.Println("[Xychat] You are using the default token_secret. " +
+			"Please set a secure value.")
+	}
 
-	secret := []byte(secret_string)
+	secret := []byte(secretString)
 	return secret, nil
 }
 
