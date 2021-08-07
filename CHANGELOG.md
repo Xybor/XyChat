@@ -11,6 +11,7 @@
 + Change the loading environment variable method.
 + Use a correct exiting way by using `fatal` or `panic`.
 + Now it is possible to deploy on Heroku.
++ Add vendor.
 + Fix bugs of `Alpha.0.0.3`.
 
 # Alpha.0.0.3
