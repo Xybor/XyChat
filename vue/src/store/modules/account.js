@@ -11,27 +11,35 @@ const savedToken = getJWTAuthenToken();
 const savedUsername = getUsername();
 const state = savedToken
   ? {
-      status: { loggedIn: true },
-      user: { token: savedToken, username: savedUsername },
+      isLoggedIn: true,
+      token: savedToken,
+      username: savedUsername,
+      registering: false,
     }
-  : { status: { loggedIn: false }, user: null };
+  : {
+      isLoggedIn: false,
+      token: null,
+      username: null,
+      registering: false,
+    };
 const actions = {
   login({ dispatch, commit }, { username, password }) {
     commit("loginRequest", { token: null, username: username });
     var rs = userSerive.login(username, password);
     rs.then((response) => {
       const data = response.data.data;
+      console.log(data);
       if (data.token) {
         const revicedToken = data.token;
-        const revicedUsername = data.username;
 
         setJWTtAuthenToken(revicedToken);
-        setUsername(revicedUsername);
-        router.push("/profile");
+        setUsername(username);
         commit("loginSuccess", {
           token: revicedToken,
-          username: revicedUsername,
+          username: username,
         });
+        dispatch("alert/success", "Login successfully", { root: true });
+        router.push("/profile");
       } else {
         commit("loginFailure");
         dispatch("alert/error", "Login Fail", { root: true });
@@ -46,7 +54,7 @@ const actions = {
     var rs = userSerive.register(username, password);
     rs.then((response) => {
       commit("registerSuccess");
-      dispatch("alert/success", "Register success fully", { root: true });
+      dispatch("alert/success", "Register successfully", { root: true });
     }).catch((err) => {
       commit("registerFailure");
       dispatch("alert/error", "Register fail", { root: true });
@@ -55,35 +63,41 @@ const actions = {
   logout({ dispatch, commit }) {
     commit("logout");
     router.push("/");
+
     userSerive.logout();
+    dispatch("alert/success", "Logout success", { root: true });
   },
 };
 
 const mutations = {
-  loginRequest(state, user) {
-    state.status = { loggedIn: true };
-    state.user = user;
+  loginRequest(state, data) {
+    state.isLoggedIn = true;
+    state.username = data.username;
+    state.token = null;
   },
-  loginSuccess(state, user) {
-    state.status = { loggedIn: true };
-    state.user = user;
+  loginSuccess(state, data) {
+    state.isLoggedIn = true;
+    state.username = data.username;
+    state.token = data.token;
   },
   loginFailure(state) {
-    state.status = { loggedIn: false };
-    state.user = null;
+    state.isLoggedIn = false;
+    state.username = null;
+    state.token = null;
   },
   logout(state) {
-    state.status = { loggedIn: false };
-    state.user = null;
+    state.isLoggedIn = false;
+    state.username = null;
+    state.token = null;
   },
-  registerRequest(state, user) {
-    state.status = { registering: true };
+  registerRequest(state) {
+    state.registering = true;
   },
-  registerSuccess(state, user) {
-    state.status = { registering: false };
+  registerSuccess(state) {
+    state.registering = true;
   },
-  registerFailure(state, error) {
-    state.status = { registering: false };
+  registerFailure(state) {
+    state.registering = false;
   },
 };
 

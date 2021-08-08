@@ -122,5 +122,26 @@ If lucky, there is no error when you are installing, you can open the app now:
 (Xychat) $ heroku open
 ```
 
-# DOCKER
+# DEVCONTAINER
+The Visual Studio Code Remote - Containers extension lets you use a Docker container as a full-featured development environment. It allows you to open any folder inside (or mounted into) a container and take advantage of Visual Studio Code's full feature set.
 
+# VUEJS BUILD
+
+```
+cd vue
+```
+
+Install node packages
+```
+npm install
+```
+
+For develop
+```
+npm run serve
+```
+
+For deploy
+```
+npm run build
+``

@@ -16,7 +16,7 @@ import (
 func Route() *gin.Engine {
 	router := gin.Default()
 
-	router.Use(middlewares.ApplyCORSHeader)
+	//router.Use(middlewares.ApplyCORSHeader)
 
 	router.StaticFS("/ui", http.Dir("vue/dist"))
 

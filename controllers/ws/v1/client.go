@@ -60,7 +60,7 @@ func (wsc *wsClient) readFlow() {
 			break
 		}
 	}
-	wsc.CloseHandler()
+	//wsc.CloseHandler()
 }
 
 func (wsc *wsClient) writeFlow() {
