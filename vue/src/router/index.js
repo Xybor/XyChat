@@ -1,9 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { getJWTAuthenToken } from "../helpers/authen-token";
 import Home from "../views/Home.vue";
-// import Login from "../views/Login.vue";
-// import Profile from "../views/Profile.vue";
-// import Register from "../views/Register.vue";
 
 const routes = [
   {
@@ -17,17 +14,27 @@ const routes = [
     // route level code-splitting
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "" */ "../views/Login.vue"),
+    component: () => import("../views/Login.vue"),
   },
   {
     path: "/register",
     name: "Register",
-    component: () => import(/* webpackChunkName: "" */ "../views/Register.vue"),
+    component: () => import("../views/Register.vue"),
   },
   {
     path: "/profile",
     name: "Profile",
-    component: () => import(/* webpackChunkName: "" */ "../views/Profile.vue"),
+    component: () => import("../views/Profile.vue"),
+  },
+  {
+    path: "/chat",
+    name: "Chat",
+    component: () => import("../views/Chat.vue"),
+  },
+  {
+    path: "/404",
+    name: "404",
+    component: () => import("../views/404.vue"),
   },
 ];
 

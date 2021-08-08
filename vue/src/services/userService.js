@@ -1,7 +1,6 @@
 import {
   getJWTAuthenToken,
   removeJWTtAuthenToken,
-  setJWTtAuthenToken,
 } from "../helpers/authen-token";
 import { configs } from "./config";
 
@@ -14,12 +13,12 @@ export const userSerive = {
   getProfile,
 };
 
-function login(username, password) {
+async function login(username, password) {
   const params = new URLSearchParams();
   params.append("username", username);
   params.append("password", password);
 
-  return axios.get(`${configs.apiUrl}/auth`, { params: params });
+  return await axios.get(`${configs.apiUrl}/auth`, { params: params });
 }
 
 function register(username, password) {
@@ -30,10 +29,10 @@ function register(username, password) {
   return axios.get(`${configs.apiUrl}/register`, { params: params });
 }
 
-function getProfile() {
+async function getProfile() {
   const params = new URLSearchParams();
   params.append("token", getJWTAuthenToken());
-  return axios.get(`${configs.apiUrl}/profile`, { params: params });
+  return await axios.get(`${configs.apiUrl}/profile`, { params: params });
 }
 
 function logout() {

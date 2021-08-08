@@ -1,0 +1,13 @@
+#app {
+  background-color: #e2e8f0 !important;
+  height: 100vh;
+  color: gray;
+}
+
+h5 {
+  color: black;
+}
+
+.no-radius {
+  border-radius: 0;
+}
