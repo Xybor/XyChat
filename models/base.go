@@ -12,6 +12,12 @@ import (
 	"gorm.io/gorm/logger"
 )
 
+type BaseModel struct {
+	ID uint `gorm:"primaryKey"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
 var db *gorm.DB
 
 // IntializeDB reads all credentials in environments variable and creates a
