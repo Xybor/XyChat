@@ -4,7 +4,7 @@ import "github.com/gin-gonic/gin"
 
 // ApplyAPIHeader adds some headers for API response.
 func ApplyAPIHeader(c *gin.Context) {
-	c.Writer.Header().Add("Access-Control-Allow-Origin", "*")
+	c.Writer.Header().Add("Content-Type", "application/json")
 }
 
 // ApplyCORSHeader adds the Access-Control-Allow-Origin to the header of

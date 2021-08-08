@@ -31,19 +31,19 @@ func SetRetrievingMethod(m string) {
 	method = m
 }
 
-func retrieveGET(c *gin.Context, key string) (string, error) {
-	v, ok := c.GetQuery(key)
+func retrieveGET(ctx *gin.Context, key string) (string, error) {
+	v, ok := ctx.GetQuery(key)
 	if !ok {
-		return "", errors.New("invalid key")
+		return "", errors.New("invalid get key")
 	}
 
 	return v, nil
 }
 
-func retrievePOST(c *gin.Context, key string) (string, error) {
-	v, ok := c.GetPostForm(key)
+func retrievePOST(ctx *gin.Context, key string) (string, error) {
+	v, ok := ctx.GetPostForm(key)
 	if !ok {
-		return "", errors.New("invalid key")
+		return "", errors.New("invalid post key")
 	}
 
 	return v, nil

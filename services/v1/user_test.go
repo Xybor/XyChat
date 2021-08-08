@@ -300,166 +300,166 @@ func TestCreateSeedingUsers(t *testing.T) {
 
 func TestRegisterMember(t *testing.T) {
 	if err := Register(nil, "memberbynone", "member"); err != nil {
-		log.Println("Register member by none: ", err)
+		t.Log("Register member by none: ", err)
 		t.Fail()
 	}
 
 	if err := Register(&member.ID, "memberbymember", "member"); err != nil {
-		log.Println("Register member by member: ", err)
+		t.Log("Register member by member: ", err)
 		t.Fail()
 	}
 
 	if err := Register(&mod.ID, "memberbymod", "member"); err != nil {
-		log.Println("Register member by mod: ", err)
+		t.Log("Register member by mod: ", err)
 		t.Fail()
 	}
 
 	if err := Register(&admin.ID, "memberbyadmin", "member"); err != nil {
-		log.Println("Register member by admin: ", err)
+		t.Log("Register member by admin: ", err)
 		t.Fail()
 	}
 }
 
 func TestRegisterMod(t *testing.T) {
 	if err := Register(nil, "modbynone", "mod"); err != services.ErrorPermission {
-		log.Println("Register mod by none: ", err)
+		t.Log("Register mod by none: ", err)
 		t.Fail()
 	}
 
 	if err := Register(&member.ID, "modbymember", "mod"); err != services.ErrorPermission {
-		log.Println("Register mod by member: ", err)
+		t.Log("Register mod by member: ", err)
 		t.Fail()
 	}
 
 	if err := Register(&mod.ID, "modbymod", "mod"); err != services.ErrorPermission {
-		log.Println("Register mod by mod: ", err)
+		t.Log("Register mod by mod: ", err)
 		t.Fail()
 	}
 
 	if err := Register(&admin.ID, "modbyadmin", "mod"); err != nil {
-		log.Println("Register mod by admin: ", err)
+		t.Log("Register mod by admin: ", err)
 		t.Fail()
 	}
 }
 
 func TestRegisterAdmin(t *testing.T) {
 	if err := Register(nil, "adminbynone", "admin"); err != services.ErrorPermission {
-		log.Println("Register admin by none: ", err)
+		t.Log("Register admin by none: ", err)
 		t.Fail()
 	}
 
 	if err := Register(&member.ID, "adminbymember", "admin"); err != services.ErrorPermission {
-		log.Println("Register admin by member: ", err)
+		t.Log("Register admin by member: ", err)
 		t.Fail()
 	}
 
 	if err := Register(&mod.ID, "adminbymod", "admin"); err != services.ErrorPermission {
-		log.Println("Register admin by mod: ", err)
+		t.Log("Register admin by mod: ", err)
 		t.Fail()
 	}
 
 	if err := Register(&admin.ID, "adminbyadmin", "admin"); err != services.ErrorPermission {
-		log.Println("Register admin by admin: ", err)
+		t.Log("Register admin by admin: ", err)
 		t.Fail()
 	}
 }
 
 func TestRegisterUnknownRole(t *testing.T) {
 	if err := Register(nil, "userunknownrole", "something"); err != services.ErrorUnknownRole {
-		log.Println("Register unknown role: ", err)
+		t.Log("Register unknown role: ", err)
 	}
 }
 
 func TestRegisterDuplication(t *testing.T) {
 	if err := Register(nil, "memberbynonedup", "member"); err != nil {
-		log.Println("Register member by none dup 1: ", err)
+		t.Log("Register member by none dup 1: ", err)
 		t.Fail()
 	}
 
 	if err := Register(nil, "memberbynonedup", "member"); err != services.ErrorExistedUsername {
-		log.Println("Register member by none dup 2: ", err)
+		t.Log("Register member by none dup 2: ", err)
 		t.Fail()
 	}
 }
 
 func TestRemoveMember(t *testing.T) {
 	if err := Remove(nil, "memberremovebynone", "member"); err != services.ErrorPermission {
-		log.Println("Remove member by none: ", err)
+		t.Log("Remove member by none: ", err)
 		t.Fail()
 	}
 
 	if err := Remove(&member.ID, "memberremovebymember", "member"); err != services.ErrorPermission {
-		log.Println("Remove member by member: ", err)
+		t.Log("Remove member by member: ", err)
 		t.Fail()
 	}
 
 	if err := Remove(&mod.ID, "memberremovebymod", "member"); err != nil {
-		log.Println("Remove member by mod: ", err)
+		t.Log("Remove member by mod: ", err)
 		t.Fail()
 	}
 
 	if err := Remove(&admin.ID, "memberremovebyadmin", "member"); err != nil {
-		log.Println("Remove member by admin: ", err)
+		t.Log("Remove member by admin: ", err)
 		t.Fail()
 	}
 }
 func TestRemoveMod(t *testing.T) {
 	if err := Remove(nil, "modremovebynone", "mod"); err != services.ErrorPermission {
-		log.Println("Remove mod by none: ", err)
+		t.Log("Remove mod by none: ", err)
 		t.Fail()
 	}
 
 	if err := Remove(&member.ID, "modremovebymember", "mod"); err != services.ErrorPermission {
-		log.Println("Remove mod by member: ", err)
+		t.Log("Remove mod by member: ", err)
 		t.Fail()
 	}
 
 	if err := Remove(&mod.ID, "modremovebymod", "mod"); err != services.ErrorPermission {
-		log.Println("Remove mod by mod: ", err)
+		t.Log("Remove mod by mod: ", err)
 		t.Fail()
 	}
 
 	if err := Remove(&admin.ID, "modremovebyadmin", "mod"); err != nil {
-		log.Println("Remove mod by admin: ", err)
+		t.Log("Remove mod by admin: ", err)
 		t.Fail()
 	}
 }
 
 func TestRemoveAdmin(t *testing.T) {
 	if err := Remove(nil, "adminremovebynone", "admin"); err != services.ErrorPermission {
-		log.Println("Remove admin by none: ", err)
+		t.Log("Remove admin by none: ", err)
 		t.Fail()
 	}
 
 	if err := Remove(&member.ID, "adminremovebymember", "admin"); err != services.ErrorPermission {
-		log.Println("Remove admin by member: ", err)
+		t.Log("Remove admin by member: ", err)
 		t.Fail()
 	}
 
 	if err := Remove(&mod.ID, "adminremovebymod", "admin"); err != services.ErrorPermission {
-		log.Println("Remove admin by mod: ", err)
+		t.Log("Remove admin by mod: ", err)
 		t.Fail()
 	}
 
 	if err := Remove(&admin.ID, "adminremovebyadmin", "admin"); err != services.ErrorPermission {
-		log.Println("Remove admin by admin: ", err)
+		t.Log("Remove admin by admin: ", err)
 		t.Fail()
 	}
 }
 
 func TestRemoveSelf(t *testing.T) {
 	if err = SelfRemove("member"); err != nil {
-		log.Println("Member self removes: ", err)
+		t.Log("Member self removes: ", err)
 		t.Fail()
 	}
 
 	if err = SelfRemove("mod"); err != nil {
-		log.Println("Mod self removes: ", err)
+		t.Log("Mod self removes: ", err)
 		t.Fail()
 	}
 
 	if err = SelfRemove("admin"); err != nil {
-		log.Println("Admin self removes: ", err)
+		t.Log("Admin self removes: ", err)
 		t.Fail()
 	}
 }
@@ -469,34 +469,34 @@ func TestAuthenticateTrue(t *testing.T) {
 
 	r, err := userService.Authenticate(adminUsn, adminPwd)
 	if err != nil {
-		log.Println("Admin authenticates: ", err)
+		t.Log("Admin authenticates: ", err)
 		t.Fail()
 	}
 
 	if r.ID != admin.ID {
-		log.Println("Admin authenticates: different result's id")
+		t.Log("Admin authenticates: different result's id")
 		t.Fail()
 	}
 
 	r, err = userService.Authenticate(modUsn, modPwd)
 	if err != nil {
-		log.Println("Mod authenticates: ", err)
+		t.Log("Mod authenticates: ", err)
 		t.Fail()
 	}
 
 	if r.ID != mod.ID {
-		log.Println("Mod authenticates: different result's id")
+		t.Log("Mod authenticates: different result's id")
 		t.Fail()
 	}
 
 	r, err = userService.Authenticate(memUsn, memPwd)
 	if err != nil {
-		log.Println("Member authenticates: ", err)
+		t.Log("Member authenticates: ", err)
 		t.Fail()
 	}
 
 	if r.ID != member.ID {
-		log.Println("Member authenticates: different result's id")
+		t.Log("Member authenticates: different result's id")
 		t.Fail()
 	}
 }
@@ -505,7 +505,7 @@ func TestAuthenticateFalse(t *testing.T) {
 	userService := services.CreateUserService(nil)
 
 	if _, err = userService.Authenticate(adminUsn, modPwd); err != services.ErrorFailedAuthentication {
-		log.Println("Authentication is expected to be fail but something wrongs: ", err)
+		t.Log("Authentication is expected to be fail but something wrongs: ", err)
 		t.Fail()
 	}
 }
@@ -515,34 +515,34 @@ func TestAuthenticateByIdTrue(t *testing.T) {
 
 	r, err := userService.AuthenticateById(admin.ID, adminPwd)
 	if err != nil {
-		log.Println("Admin authenticates by id: ", err)
+		t.Log("Admin authenticates by id: ", err)
 		t.Fail()
 	}
 
 	if r.ID != admin.ID {
-		log.Println("Admin authenticates by id: different result's id")
+		t.Log("Admin authenticates by id: different result's id")
 		t.Fail()
 	}
 
 	r, err = userService.AuthenticateById(mod.ID, modPwd)
 	if err != nil {
-		log.Println("Mod authenticates by id: ", err)
+		t.Log("Mod authenticates by id: ", err)
 		t.Fail()
 	}
 
 	if r.ID != mod.ID {
-		log.Println("Mod authenticates: different result's id")
+		t.Log("Mod authenticates: different result's id")
 		t.Fail()
 	}
 
 	r, err = userService.AuthenticateById(member.ID, memPwd)
 	if err != nil {
-		log.Println("Member authenticates: ", err)
+		t.Log("Member authenticates: ", err)
 		t.Fail()
 	}
 
 	if r.ID != member.ID {
-		log.Println("Member authenticates: different result's id")
+		t.Log("Member authenticates: different result's id")
 		t.Fail()
 	}
 }
@@ -551,95 +551,95 @@ func TestAuthenticateByIdFalse(t *testing.T) {
 	userService := services.CreateUserService(nil)
 
 	if _, err = userService.AuthenticateById(admin.ID, modPwd); err != services.ErrorFailedAuthentication {
-		log.Println("AuthenticateById is expected to be fail but something wrongs: ", err)
+		t.Log("AuthenticateById is expected to be fail but something wrongs: ", err)
 		t.Fail()
 	}
 }
 
 func TestSelectMember(t *testing.T) {
 	if err = Select(nil, "member"); err != services.ErrorPermission {
-		log.Println("None selects member: ", err)
+		t.Log("None selects member: ", err)
 		t.Fail()
 	}
 
 	if err = Select(&member.ID, "member"); err != services.ErrorPermission {
-		log.Println("Member selects member: ", err)
+		t.Log("Member selects member: ", err)
 		t.Fail()
 	}
 
 	if err = Select(&mod.ID, "member"); err != nil {
-		log.Println("Mod selects member: ", err)
+		t.Log("Mod selects member: ", err)
 		t.Fail()
 	}
 
 	if err = Select(&admin.ID, "member"); err != nil {
-		log.Println("Admin selects member: ", err)
+		t.Log("Admin selects member: ", err)
 		t.Fail()
 	}
 }
 
 func TestSelectMod(t *testing.T) {
 	if err = Select(nil, "mod"); err != services.ErrorPermission {
-		log.Println("None selects mod: ", err)
+		t.Log("None selects mod: ", err)
 		t.Fail()
 	}
 
 	if err = Select(&member.ID, "mod"); err != services.ErrorPermission {
-		log.Println("Member selects mod: ", err)
+		t.Log("Member selects mod: ", err)
 		t.Fail()
 	}
 
 	if err = Select(&mod.ID, "mod"); err != services.ErrorPermission {
-		log.Println("Mod selects mod: ", err)
+		t.Log("Mod selects mod: ", err)
 		t.Fail()
 	}
 
 	if err = Select(&admin.ID, "mod"); err != nil {
-		log.Println("Admin selects mod: ", err)
+		t.Log("Admin selects mod: ", err)
 		t.Fail()
 	}
 }
 
 func TestSelectAdmin(t *testing.T) {
 	if err = Select(nil, "admin"); err != services.ErrorPermission {
-		log.Println("None selects admin: ", err)
+		t.Log("None selects admin: ", err)
 		t.Fail()
 	}
 
 	if err = Select(&member.ID, "admin"); err != services.ErrorPermission {
-		log.Println("Member selects admin: ", err)
+		t.Log("Member selects admin: ", err)
 		t.Fail()
 	}
 
 	if err = Select(&mod.ID, "admin"); err != services.ErrorPermission {
-		log.Println("Mod selects admin: ", err)
+		t.Log("Mod selects admin: ", err)
 		t.Fail()
 	}
 
 	if err = Select(&admin.ID, "admin"); err != services.ErrorPermission {
-		log.Println("Admin selects admin: ", err)
+		t.Log("Admin selects admin: ", err)
 		t.Fail()
 	}
 }
 
 func TestSelectSelf(t *testing.T) {
 	if err := SelfSelect(nil); err != services.ErrorPermission {
-		log.Println("None selects self: ", err)
+		t.Log("None selects self: ", err)
 		t.Fail()
 	}
 
 	if err := SelfSelect(&member.ID); err != nil {
-		log.Println("Member selects self: ", err)
+		t.Log("Member selects self: ", err)
 		t.Fail()
 	}
 
 	if err := SelfSelect(&mod.ID); err != nil {
-		log.Println("Mod selects self: ", err)
+		t.Log("Mod selects self: ", err)
 		t.Fail()
 	}
 
 	if err := SelfSelect(&admin.ID); err != nil {
-		log.Println("Admin selects self: ", err)
+		t.Log("Admin selects self: ", err)
 		t.Fail()
 	}
 }
@@ -649,22 +649,22 @@ func TestUpdateInfoMember(t *testing.T) {
 	gender := "male"
 
 	if err = UpdateInfo(nil, "noneupdateinfomember", "member", &age, &gender); err != services.ErrorPermission {
-		log.Println("None updates info member: ", err)
+		t.Log("None updates info member: ", err)
 		t.Fail()
 	}
 
 	if err = UpdateInfo(&member.ID, "memberupdateinfomember", "member", &age, &gender); err != services.ErrorPermission {
-		log.Println("Member updates info member: ", err)
+		t.Log("Member updates info member: ", err)
 		t.Fail()
 	}
 
 	if err = UpdateInfo(&mod.ID, "modupdateinfomember", "member", &age, &gender); err != nil {
-		log.Println("Mod updates info member: ", err)
+		t.Log("Mod updates info member: ", err)
 		t.Fail()
 	}
 
 	if err = UpdateInfo(&admin.ID, "adminupdateinfomember", "member", &age, &gender); err != nil {
-		log.Println("Admin updates info member: ", err)
+		t.Log("Admin updates info member: ", err)
 		t.Fail()
 	}
 }
@@ -674,22 +674,22 @@ func TestUpdateInfoMod(t *testing.T) {
 	gender := "male"
 
 	if err = UpdateInfo(nil, "noneupdateinfomod", "mod", &age, &gender); err != services.ErrorPermission {
-		log.Println("None updates info mod: ", err)
+		t.Log("None updates info mod: ", err)
 		t.Fail()
 	}
 
 	if err = UpdateInfo(&member.ID, "memberupdateinfomod", "mod", &age, &gender); err != services.ErrorPermission {
-		log.Println("Member updates info mod: ", err)
+		t.Log("Member updates info mod: ", err)
 		t.Fail()
 	}
 
 	if err = UpdateInfo(&mod.ID, "modupdateinfomod", "mod", &age, &gender); err != services.ErrorPermission {
-		log.Println("Mod updates info mod: ", err)
+		t.Log("Mod updates info mod: ", err)
 		t.Fail()
 	}
 
 	if err = UpdateInfo(&admin.ID, "adminupdateinfomod", "mod", &age, &gender); err != nil {
-		log.Println("Admin updates info mod: ", err)
+		t.Log("Admin updates info mod: ", err)
 		t.Fail()
 	}
 }
@@ -699,22 +699,22 @@ func TestUpdateInfoAdmin(t *testing.T) {
 	gender := "male"
 
 	if err = UpdateInfo(nil, "noneupdateinfoadmin", "admin", &age, &gender); err != services.ErrorPermission {
-		log.Println("None updates info admin: ", err)
+		t.Log("None updates info admin: ", err)
 		t.Fail()
 	}
 
 	if err = UpdateInfo(&member.ID, "memberupdateinfoadmin", "admin", &age, &gender); err != services.ErrorPermission {
-		log.Println("Member updates info admin: ", err)
+		t.Log("Member updates info admin: ", err)
 		t.Fail()
 	}
 
 	if err = UpdateInfo(&mod.ID, "modupdateinfomadmin", "admin", &age, &gender); err != services.ErrorPermission {
-		log.Println("Mod updates info admin: ", err)
+		t.Log("Mod updates info admin: ", err)
 		t.Fail()
 	}
 
 	if err = UpdateInfo(&admin.ID, "adminupdateinfoadmin", "admin", &age, &gender); err != services.ErrorPermission {
-		log.Println("Admin updates info admin: ", err)
+		t.Log("Admin updates info admin: ", err)
 		t.Fail()
 	}
 }
@@ -724,78 +724,78 @@ func TestUpdateInfoWithNull(t *testing.T) {
 	gender := "gay"
 
 	if err = UpdateInfo(&admin.ID, "adminupdateinfomemberagenull", "member", nil, &gender); err != nil {
-		log.Println("Admin updates info member with age null: ", err)
+		t.Log("Admin updates info member with age null: ", err)
 		t.Fail()
 	}
 
 	if err = UpdateInfo(&mod.ID, "modupdateinfomembergendernull", "member", &age, nil); err != nil {
-		log.Println("Mod updates info member with gender null: ", err)
+		t.Log("Mod updates info member with gender null: ", err)
 		t.Fail()
 	}
 }
 
 func TestSelfUpdateInfo(t *testing.T) {
 	if err = SelfUpdateInfo(&member.ID); err != nil {
-		log.Println("Member self updates info: ", err)
+		t.Log("Member self updates info: ", err)
 		t.Fail()
 	}
 
 	if err = SelfUpdateInfo(&mod.ID); err != nil {
-		log.Println("Mod self updates info: ", err)
+		t.Log("Mod self updates info: ", err)
 		t.Fail()
 	}
 
 	if err = SelfUpdateInfo(&admin.ID); err != nil {
-		log.Println("Admin self updates info: ", err)
+		t.Log("Admin self updates info: ", err)
 		t.Fail()
 	}
 }
 
 func TestUpdateRole(t *testing.T) {
 	if err = UpdateRole(nil, "noneupdaterolemembertomod", "member", "mod"); err != services.ErrorPermission {
-		log.Println("None updates role member to mod: ", err)
+		t.Log("None updates role member to mod: ", err)
 		t.Fail()
 	}
 
 	if err = UpdateRole(&member.ID, "memberupdaterolemembertomod", "member", "mod"); err != services.ErrorPermission {
-		log.Println("Member updates role member to mod: ", err)
+		t.Log("Member updates role member to mod: ", err)
 		t.Fail()
 	}
 
 	if err = UpdateRole(&mod.ID, "modupdaterolemembertomod", "member", "mod"); err != services.ErrorPermission {
-		log.Println("Mod updates role member to mod: ", err)
+		t.Log("Mod updates role member to mod: ", err)
 		t.Fail()
 	}
 
 	if err = UpdateRole(&admin.ID, "adminupdaterolemembertomod", "member", "mod"); err != nil {
-		log.Println("Admin updates role member to mod: ", err)
+		t.Log("Admin updates role member to mod: ", err)
 		t.Fail()
 	}
 
 	if err = UpdateRole(&mod.ID, "modupdaterolemembertoadmin", "member", "admin"); err != services.ErrorPermission {
-		log.Println("Mod updates role member to admin: ", err)
+		t.Log("Mod updates role member to admin: ", err)
 		t.Fail()
 	}
 
 	if err = UpdateRole(&admin.ID, "adminupdaterolemembertoadmin", "member", "admin"); err != services.ErrorPermission {
-		log.Println("Admin updates role member to admin: ", err)
+		t.Log("Admin updates role member to admin: ", err)
 		t.Fail()
 	}
 }
 
 func TestSelfUpdateRole(t *testing.T) {
 	if err = SelfUpdateInfo(&member.ID); err != nil {
-		log.Println("Member self updates role: ", err)
+		t.Log("Member self updates role: ", err)
 		t.Fail()
 	}
 
 	if err = SelfUpdateInfo(&mod.ID); err != nil {
-		log.Println("Member self updates role: ", err)
+		t.Log("Member self updates role: ", err)
 		t.Fail()
 	}
 
 	if err = SelfUpdateInfo(&mod.ID); err != nil {
-		log.Println("Member self updates role: ", err)
+		t.Log("Member self updates role: ", err)
 		t.Fail()
 	}
 }
@@ -803,25 +803,25 @@ func TestSelfUpdateRole(t *testing.T) {
 func TestUpdatePasswordMember(t *testing.T) {
 	err = UpdatePassword(nil, "noneupdatepaswordmember", "member")
 	if err != services.ErrorPermission {
-		log.Println("None updates password member: ", err)
+		t.Log("None updates password member: ", err)
 		t.Fail()
 	}
 
 	err = UpdatePassword(&member.ID, "memberupdatepaswordmember", "member")
 	if err != services.ErrorPermission {
-		log.Println("Member updates password havmember: ", err)
+		t.Log("Member updates password havmember: ", err)
 		t.Fail()
 	}
 
 	err = UpdatePassword(&mod.ID, "modupdatepaswordmember", "member")
 	if err != nil {
-		log.Println("Mod updates password member: ", err)
+		t.Log("Mod updates password member: ", err)
 		t.Fail()
 	}
 
 	err = UpdatePassword(&admin.ID, "adminupdatepaswordmember", "member")
 	if err != nil {
-		log.Println("Admin updates password member: ", err)
+		t.Log("Admin updates password member: ", err)
 		t.Fail()
 	}
 }
@@ -829,25 +829,25 @@ func TestUpdatePasswordMember(t *testing.T) {
 func TestUpdatePasswordMod(t *testing.T) {
 	err = UpdatePassword(nil, "noneupdatepaswordmod", "mod")
 	if err != services.ErrorPermission {
-		log.Println("None updates password mod: ", err)
+		t.Log("None updates password mod: ", err)
 		t.Fail()
 	}
 
 	err = UpdatePassword(&member.ID, "memberupdatepaswordmod", "mod")
 	if err != services.ErrorPermission {
-		log.Println("Member updates password mod: ", err)
+		t.Log("Member updates password mod: ", err)
 		t.Fail()
 	}
 
 	err = UpdatePassword(&mod.ID, "modupdatepaswordmod", "mod")
 	if err != services.ErrorPermission {
-		log.Println("Mod updates password mod: ", err)
+		t.Log("Mod updates password mod: ", err)
 		t.Fail()
 	}
 
 	err = UpdatePassword(&admin.ID, "adminupdatepaswordmod", "mod")
 	if err != nil {
-		log.Println("Admin updates password mod: ", err)
+		t.Log("Admin updates password mod: ", err)
 		t.Fail()
 	}
 }
@@ -855,25 +855,25 @@ func TestUpdatePasswordMod(t *testing.T) {
 func TestUpdatePasswordAdmin(t *testing.T) {
 	err = UpdatePassword(nil, "noneupdatepaswordadmin", "admin")
 	if err != services.ErrorPermission {
-		log.Println("None updates password admin: ", err)
+		t.Log("None updates password admin: ", err)
 		t.Fail()
 	}
 
 	err = UpdatePassword(&member.ID, "memberupdatepaswordadmin", "admin")
 	if err != services.ErrorPermission {
-		log.Println("Member updates password admin: ", err)
+		t.Log("Member updates password admin: ", err)
 		t.Fail()
 	}
 
 	err = UpdatePassword(&mod.ID, "modupdatepaswordadmin", "admin")
 	if err != services.ErrorPermission {
-		log.Println("Mod updates password admin: ", err)
+		t.Log("Mod updates password admin: ", err)
 		t.Fail()
 	}
 
 	err = UpdatePassword(&admin.ID, "adminupdatepaswordadmin", "admin")
 	if err != services.ErrorPermission {
-		log.Println("Admin updates password admin: ", err)
+		t.Log("Admin updates password admin: ", err)
 		t.Fail()
 	}
 }
@@ -881,19 +881,19 @@ func TestUpdatePasswordAdmin(t *testing.T) {
 func TestSelfUpdatePassword(t *testing.T) {
 	err = SelfUpdatePassword("memberselfupdatepassword", "member")
 	if err != nil {
-		log.Println("Member self updates password: ", err)
+		t.Log("Member self updates password: ", err)
 		t.Fail()
 	}
 
 	err = SelfUpdatePassword("modselfupdatepassword", "mod")
 	if err != nil {
-		log.Println("Mod self updates password: ", err)
+		t.Log("Mod self updates password: ", err)
 		t.Fail()
 	}
 
 	err = SelfUpdatePassword("Adminselfupdatepassword", "admin")
 	if err != nil {
-		log.Println("Admin self updates password: ", err)
+		t.Log("Admin self updates password: ", err)
 		t.Fail()
 	}
 }

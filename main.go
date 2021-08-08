@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/xybor/xychat/helpers"
 	"github.com/xybor/xychat/models"
@@ -36,7 +37,7 @@ func main() {
 	}
 
 	if *run {
-		servicev1.InitializeMatchQueue()
+		servicev1.InitializeMatchQueue(60 * time.Second)
 
 		router := routers.Route()
 		router.Run(":" + helpers.MustReadEnv("PORT"))

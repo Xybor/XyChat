@@ -27,35 +27,26 @@ func MatchHandler(ctx *gin.Context) {
 
 	id := context.GetUID(ctx)
 	userService := service.CreateUserService(id)
+	clientService, err := service.CreateMatchService(userService)
 
-	userRepresentation, err := userService.SelfSelect()
+	// If there was already a connection of this user, the return value is nil.
 	if err != nil {
 		response := wshelper.NewWSError(ctrl.ErrorFailedProcess, err.Error())
 		client.WriteJSON(response)
 		return
 	}
 
-	clientService := service.CreateClientService(*userRepresentation)
-	// If there was already a connection of this user, the return value is nil.
-	if clientService == nil {
-		response := wshelper.NewWSError(
-			ctrl.ErrorDuplicatedConnection,
-			"An account is only allowed to join into the match queue one time",
-		)
-		client.WriteJSON(response)
-		return
-	}
-
 	// Before closing the wsClient, it needs to unregister the current user
 	// from matching queue and close the service.
+
 	client.CloseHandler = func() {
-		defer clientService.Unregister()
-		defer clientService.Close()
+		clientService.Unregister()
+		clientService.Close()
 	}
 
 	// Register the user to matching queue and waiting the result.
 	clientService.Register()
-	room := clientService.WaitForJoinRoom()
+	room := clientService.WaitForRoom()
 
 	// 0 is an invalid room's identity, therefore it sends failure response to
 	// client.

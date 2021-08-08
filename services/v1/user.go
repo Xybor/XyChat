@@ -30,15 +30,6 @@ const (
 	GenderOther  = "other"
 )
 
-var (
-	ErrorPermission           = errors.New("you don't have the permission")
-	ErrorUnknownRole          = errors.New("unknown role")
-	ErrorExistedUsername      = errors.New("username existed")
-	ErrorInvalidOldPassword   = errors.New("invalid old password")
-	ErrorFailedAuthentication = errors.New("invalid username or password")
-	ErrorUnknown              = errors.New("some error occurs")
-)
-
 type userService struct {
 	user         *models.User
 	isAuthorized bool
@@ -174,7 +165,6 @@ func (us *userService) Remove(id uint) error {
 // RemoveByUsername deletes a user with a given name.  It needs a subject to
 // determine the permission.
 func (us *userService) RemoveByUsername(username string) error {
-	log.Println(*us)
 	if us.user == nil {
 		return ErrorPermission
 	}

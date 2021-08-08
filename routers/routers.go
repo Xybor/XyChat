@@ -22,18 +22,18 @@ func Route() *gin.Engine {
 
 	rapi := router.Group("api")
 	rapi.Use(
-		middlewares.VerifyUserToken,
+		middlewares.VerifyUserToken(true),
 		middlewares.ApplyAPIHeader,
 	)
 	{
 		rapi1 := rapi.Group("v1")
 		{
-			rapi1.GET("auth",
-				mdwv1.MustHaveQueryParam(context.GET, "username", "password"),
+			rapi1.POST("auth",
+				mdwv1.MustHaveQueryParam(context.POST, "username", "password"),
 				api1.UserAuthenticateHandler,
 			)
-			rapi1.GET("register",
-				mdwv1.MustHaveQueryParam(context.GET, "username", "password"),
+			rapi1.POST("register",
+				mdwv1.MustHaveQueryParam(context.POST, "username", "password"),
 				api1.UserRegisterHandler,
 			)
 			rapi1.GET("profile", api1.UserProfileHandler)
@@ -41,11 +41,11 @@ func Route() *gin.Engine {
 			rapi1.GET("users/:id", api1.UserGETHandler)
 			rapi1.PUT("users/:id", api1.UserPUTHandler)
 			rapi1.PUT("users/:id/role",
-				mdwv1.MustHaveQueryParam(context.GET, "role"),
+				mdwv1.MustHaveQueryParam(context.POST, "role"),
 				api1.UserChangeRoleHandler,
 			)
 			rapi1.PUT("users/:id/password",
-				mdwv1.MustHaveQueryParam(context.GET, "newpassword"),
+				mdwv1.MustHaveQueryParam(context.POST, "newpassword"),
 				api1.UserChangePasswordHandler,
 			)
 		}
@@ -53,7 +53,7 @@ func Route() *gin.Engine {
 
 	rws := router.Group("ws")
 	rws.Use(
-		middlewares.VerifyUserToken,
+		middlewares.VerifyUserToken(false),
 		middlewares.UpgradeToWebSocket,
 	)
 	{
