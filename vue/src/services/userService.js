@@ -13,12 +13,13 @@ export const userSerive = {
   getProfile,
 };
 
-async function login(username, password) {
-  const params = new URLSearchParams();
-  params.append("username", username);
-  params.append("password", password);
+function login(username, password) {
+  const body = {
+    username: username,
+    password: password,
+  };
 
-  return await axios.get(`${configs.apiUrl}/auth`, { params: params });
+  return axios.post(`${configs.apiUrl}/auth`, body);
 }
 
 function register(username, password) {
@@ -26,7 +27,7 @@ function register(username, password) {
   params.append("username", username);
   params.append("password", password);
 
-  return axios.get(`${configs.apiUrl}/register`, { params: params });
+  return axios.post(`${configs.apiUrl}/register`, { params: params });
 }
 
 async function getProfile() {

@@ -55,13 +55,13 @@
     </div>
     <div class="row justify-content-md-center mt-2">
       <div class="form-group col-6">
-        <label for="password">Verify Password</label>
+        <label for="verifyPassword">Verify Password</label>
         <input
           type="password"
           class="form-control"
-          id="password"
+          id="verifyPassword"
           placeholder="******"
-          v-model="password"
+          v-model="verifyPassword"
         />
       </div>
     </div>
@@ -93,12 +93,16 @@ export default {
     // Declear variable
     const username = ref("");
     const password = ref("");
+    const verifyPassword = ref("");
     const store = useStore();
 
     // Methods
     const handleSubmit = () => {
       if (username.value == "" || password.value == "") {
         store.dispatch("alert/error", "Username or password can not empty");
+        return false;
+      } else if (password.value != verifyPassword.value) {
+        store.dispatch("alert/error", "Password not match");
         return false;
       }
 
@@ -111,6 +115,7 @@ export default {
     return {
       username,
       password,
+      verifyPassword,
       handleSubmit,
     };
   },

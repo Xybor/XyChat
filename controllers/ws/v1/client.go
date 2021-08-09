@@ -65,12 +65,8 @@ func (wsc *wsClient) readFlow() {
 			break
 		}
 	}
-<<<<<<< HEAD
-	//wsc.CloseHandler()
-=======
 
 	wsc.CloseHandler()
->>>>>>> 946e20c13db55d5c113aac5b51fa3a0ed0f8f59f
 }
 
 func (wsc *wsClient) writeFlow() {
