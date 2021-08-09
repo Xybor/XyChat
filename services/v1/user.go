@@ -30,15 +30,6 @@ const (
 	GenderOther  = "other"
 )
 
-var (
-	ErrorPermission           = errors.New("you don't have the permission")
-	ErrorUnknownRole          = errors.New("unknown role")
-	ErrorExistedUsername      = errors.New("username existed")
-	ErrorInvalidOldPassword   = errors.New("invalid old password")
-	ErrorFailedAuthentication = errors.New("invalid username or password")
-	ErrorUnknown              = errors.New("some error occurs")
-)
-
 type userService struct {
 	user         *models.User
 	isAuthorized bool
@@ -75,23 +66,9 @@ func isValidRole(role string) bool {
 	return false
 }
 
-// CreateUserService create a userService with the subject is the user having
-// given id.  If the parameter is nil, there is no subject in this service.
-func CreateUserService(id *uint) userService {
-	if id == nil {
-		return userService{user: nil, isAuthorized: false}
-	}
-
-	user := models.User{Model: gorm.Model{ID: *id}}
-	return userService{
-		user:         &user,
-		isAuthorized: false,
-	}
-}
-
-// Authorize reads the subject's data in this service from database and assign
+// authorize reads the subject's data in this service from database and assign
 // it to userService.user
-func (us *userService) Authorize() {
+func (us *userService) authorize() {
 	if !us.isAuthorized {
 		us.isAuthorized = true
 
@@ -103,7 +80,21 @@ func (us *userService) Authorize() {
 	}
 }
 
-// Register create a user with given username and password.
+// CreateUserService create a userService with the subject is the user having
+// given id.  If the parameter is nil, there is no subject in this service.
+func CreateUserService(id *uint) userService {
+	if id == nil {
+		return userService{user: nil, isAuthorized: false}
+	}
+
+	user := models.User{BaseModel: models.BaseModel{ID: *id}}
+	return userService{
+		user:         &user,
+		isAuthorized: false,
+	}
+}
+
+// Register creates a user with given username and password.
 //
 // If the role is not member, a subject in service is required.
 func (us *userService) Register(username, password, role string) error {
@@ -114,9 +105,9 @@ func (us *userService) Register(username, password, role string) error {
 	}
 
 	if role != RoleMember {
-		us.Authorize()
+		us.authorize()
 
-		if us.user == nil || compareRole(*us.user.Role, role) == 1 {
+		if us.user == nil || compareRole(*us.user.Role, role) != 1 {
 			return ErrorPermission
 		}
 	}
@@ -140,6 +131,65 @@ func (us *userService) Register(username, password, role string) error {
 	return nil
 }
 
+// Remove deletes a user with a given id.  It needs a subject to determine the
+// permission.
+func (us *userService) Remove(id uint) error {
+	if us.user == nil {
+		return ErrorPermission
+	}
+
+	if us.user.ID != id {
+		us.authorize()
+
+		userRepresentation, err := us.Select(id)
+		if err != nil {
+			return err
+		}
+
+		if compareRole(*us.user.Role, userRepresentation.Role) != 1 {
+			return ErrorPermission
+		}
+	}
+
+	removedUser := models.User{BaseModel: models.BaseModel{ID: id}}
+
+	err := models.GetDB().Delete(&removedUser).Error
+	if err != nil {
+		log.Println(err)
+		return ErrorUnknown
+	}
+
+	return nil
+}
+
+// RemoveByUsername deletes a user with a given name.  It needs a subject to
+// determine the permission.
+func (us *userService) RemoveByUsername(username string) error {
+	if us.user == nil {
+		return ErrorPermission
+	}
+
+	us.authorize()
+
+	userRepresentation, err := us.SelectByName(username)
+	if err != nil {
+		return err
+	}
+
+	if userRepresentation.ID != us.user.ID &&
+		compareRole(*us.user.Role, userRepresentation.Role) != 1 {
+		return ErrorPermission
+	}
+
+	err = models.GetDB().Where("username=?", username).Delete(&models.User{}).Error
+	if err != nil {
+		log.Println(err)
+		return ErrorUnknown
+	}
+
+	return nil
+}
+
 // Authenticate checks if the given username and password belongs to a user.
 // If yes, it returns a userRepresentation of that user.
 func (us *userService) Authenticate(
@@ -148,7 +198,7 @@ func (us *userService) Authenticate(
 	userRepresentation := representation.UserRepresentation{}
 
 	err := models.GetDB().
-		Select("ID, username, role, age, gender").
+		Select("id, username, role, age, gender").
 		Where("username = ? and password = ?", username, password).
 		First(&models.User{}).
 		Scan(&userRepresentation).Error
@@ -167,22 +217,27 @@ func (us *userService) Authenticate(
 
 // AuthenticateById is the same as Authenticate, except it uses id instead of
 // username.  It doesn't return userRepresentation.
-func (us *userService) AuthenticateById(id uint, password string) error {
+func (us *userService) AuthenticateById(
+	id uint, password string,
+) (*representation.UserRepresentation, error) {
+	userRepresentation := representation.UserRepresentation{}
+
 	err := models.GetDB().
-		Select("id").
+		Select("id, username, role, age, gender").
 		Where("id = ? and password = ?", id, password).
-		First(&models.User{}).Error
+		First(&models.User{}).
+		Scan(&userRepresentation).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return ErrorFailedAuthentication
+			return nil, ErrorFailedAuthentication
 		}
 
 		log.Println(err)
-		return ErrorUnknown
+		return nil, ErrorUnknown
 	}
 
-	return nil
+	return &userRepresentation, nil
 }
 
 // Select gets the userRepresentation of a given userid from database.  It
@@ -193,7 +248,7 @@ func (us *userService) Select(id uint) (*representation.UserRepresentation, erro
 	}
 
 	if us.user.ID != id {
-		us.Authorize()
+		us.authorize()
 
 		if *us.user.Role != RoleModifier && *us.user.Role != RoleAdmin {
 			return nil, ErrorPermission
@@ -212,6 +267,33 @@ func (us *userService) Select(id uint) (*representation.UserRepresentation, erro
 	}
 
 	if us.user.ID != id && compareRole(*us.user.Role, userRepresentation.Role) != 1 {
+		return nil, ErrorPermission
+	}
+
+	return &userRepresentation, nil
+}
+
+// SelectByUsername gets the userRepresentation of a given name from database.  It
+// needs a subject in service to determine the permission.
+func (us *userService) SelectByName(username string) (*representation.UserRepresentation, error) {
+	if us.user == nil {
+		return nil, ErrorPermission
+	}
+
+	userRepresentation := representation.UserRepresentation{}
+	err := models.GetDB().
+		Select("ID, username, role, age, gender").
+		Where("username=?", username).
+		First(&models.User{}).
+		Scan(&userRepresentation).Error
+
+	if err != nil {
+		log.Println(err)
+		return nil, ErrorUnknown
+	}
+
+	if us.user.ID != userRepresentation.ID &&
+		compareRole(*us.user.Role, userRepresentation.Role) != 1 {
 		return nil, ErrorPermission
 	}
 
@@ -239,7 +321,7 @@ func (us *userService) UpdateInfo(
 	}
 
 	if us.user.ID != id {
-		us.Authorize()
+		us.authorize()
 
 		r, err := us.Select(id)
 		if err != nil {
@@ -251,7 +333,7 @@ func (us *userService) UpdateInfo(
 		}
 	}
 
-	user := models.User{Model: gorm.Model{ID: id}}
+	user := models.User{BaseModel: models.BaseModel{ID: id}}
 	err := models.GetDB().Model(&user).Updates(
 		models.User{
 			Age:    age,
@@ -274,7 +356,7 @@ func (us *userService) UpdateRole(id uint, role string) error {
 		return ErrorUnknownRole
 	}
 
-	us.Authorize()
+	us.authorize()
 	if us.user == nil || compareRole(*us.user.Role, role) != 1 {
 		return ErrorPermission
 	}
@@ -288,7 +370,7 @@ func (us *userService) UpdateRole(id uint, role string) error {
 		return ErrorPermission
 	}
 
-	user := models.User{Model: gorm.Model{ID: id}}
+	user := models.User{BaseModel: models.BaseModel{ID: id}}
 	err = models.GetDB().Model(&user).Updates(
 		models.User{
 			Role: &role,
@@ -317,12 +399,12 @@ func (us *userService) UpdatePassword(id uint, oldpwd *string, newpwd string) er
 			return ErrorInvalidOldPassword
 		}
 
-		err := us.AuthenticateById(id, *oldpwd)
+		_, err := us.AuthenticateById(id, *oldpwd)
 		if err != nil {
 			return ErrorInvalidOldPassword
 		}
 	} else {
-		us.Authorize()
+		us.authorize()
 		userRepresentation, err := us.Select(id)
 		if err != nil {
 			return err
@@ -333,7 +415,7 @@ func (us *userService) UpdatePassword(id uint, oldpwd *string, newpwd string) er
 		}
 	}
 
-	user := models.User{Model: gorm.Model{ID: id}}
+	user := models.User{BaseModel: models.BaseModel{ID: id}}
 	err := models.GetDB().Model(&user).Updates(
 		models.User{
 			Password: &newpwd,

@@ -9,23 +9,30 @@ import (
 // VerifyUserToken finds the token in incoming request and validates it.  If
 // there is a valid token, it will set the token's id as a parameter UID in the
 // context;
-func VerifyUserToken(ctx *gin.Context) {
-	context.SetRetrievingMethod(context.GET)
+func VerifyUserToken(cookie bool) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var token string
+		var err error
 
-	// token, err := c.Cookie("auth")
-	token, err := context.RetrieveQuery(ctx, "token")
+		if !cookie {
+			context.SetRetrievingMethod(context.GET)
+			token, err = context.RetrieveQuery(ctx, "xytok")
+		} else {
+			token, err = ctx.Cookie("xytok")
+		}
 
-	if err != nil {
-		return
+		if err != nil {
+			return
+		}
+
+		userToken := tokens.CreateEmptyUserToken()
+
+		err = userToken.Validate(token)
+		if err != nil {
+			return
+		}
+
+		id := userToken.GetUID()
+		ctx.Set("UID", id)
 	}
-
-	userToken := tokens.CreateEmptyUserToken()
-
-	err = userToken.Validate(token)
-	if err != nil {
-		return
-	}
-
-	id := userToken.GetUID()
-	ctx.Set("UID", id)
 }

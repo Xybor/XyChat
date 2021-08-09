@@ -1,9 +1,7 @@
 package models
 
-import "gorm.io/gorm"
-
 type User struct {
-	gorm.Model
+	BaseModel
 	Username *string `gorm:"unique;not null"`
 	Password *string `gorm:"not null"`
 	Role     *string `gorm:"not null;check:role in ('member', 'mod', 'admin')"`

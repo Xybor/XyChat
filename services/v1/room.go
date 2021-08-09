@@ -5,26 +5,26 @@ import (
 )
 
 type roomService struct {
-	id *uint
+	room *models.Room
 }
 
 // CreateRoomService creates a roomService struct with given roomid.
 func CreateRoomService(id *uint) roomService {
-	return roomService{id: id}
+	if id == nil {
+		return roomService{nil}
+	}
+
+	return roomService{room: &models.Room{BaseModel: models.BaseModel{ID: *id}}}
 }
 
-// Create creates a room and assigns roomid to this roomService.
-func (rs *roomService) Create() error {
-	db := models.GetDB()
-
-	room := models.Room{}
-	err := db.Create(&room).Error
+// create creates a room and assigns roomid to this roomService.
+func (rs *roomService) create() error {
+	rs.room = &models.Room{}
+	err := models.GetDB().Create(rs.room).Error
 
 	if err != nil {
 		return err
 	}
-
-	rs.id = &room.ID
 
 	return nil
 }

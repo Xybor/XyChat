@@ -1,9 +1,7 @@
 package models
 
-import "gorm.io/gorm"
-
 type Room struct {
-	gorm.Model
+	BaseModel
 	Users []*User `gorm:"many2many:detailed_rooms"`
 }
 

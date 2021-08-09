@@ -22,7 +22,7 @@ import (
 //
 // Response: An error message.
 func UserRegisterHandler(ctx *gin.Context) {
-	context.SetRetrievingMethod(context.GET)
+	context.SetRetrievingMethod(context.POST)
 
 	id := context.GetUID(ctx)
 	username := context.MustRetrieveQuery(ctx, "username")
@@ -56,7 +56,7 @@ func UserRegisterHandler(ctx *gin.Context) {
 // Response: A token in the body (for debugging) and as a cookie + An error
 // message.
 func UserAuthenticateHandler(ctx *gin.Context) {
-	context.SetRetrievingMethod(context.GET)
+	context.SetRetrievingMethod(context.POST)
 
 	username := context.MustRetrieveQuery(ctx, "username")
 	password := context.MustRetrieveQuery(ctx, "password")
@@ -85,9 +85,9 @@ func UserAuthenticateHandler(ctx *gin.Context) {
 	// Set the token as a cookie.  It is configured as httponly for safety and
 	// affects on all url.
 	dayTime := 24 * 60 * 60
-	context.SetCookie(ctx, "auth", token, dayTime)
+	context.SetCookie(ctx, "xytok", token, dayTime)
 
-	response := apihelper.NewAPIResponse(map[string]string{"token": token})
+	response := apihelper.NewEmptyAPIResponse()
 	ctx.JSON(http.StatusAccepted, response)
 }
 
@@ -152,7 +152,7 @@ func UserGETHandler(ctx *gin.Context) {
 //
 // Response: An error message.
 func UserPUTHandler(ctx *gin.Context) {
-	context.SetRetrievingMethod(context.GET)
+	context.SetRetrievingMethod(context.POST)
 
 	age, err := context.RetrieveQueryAsPUint(ctx, "age")
 	if err != nil {
@@ -193,7 +193,7 @@ func UserPUTHandler(ctx *gin.Context) {
 //
 // Response: An error message.
 func UserChangeRoleHandler(ctx *gin.Context) {
-	context.SetRetrievingMethod(context.GET)
+	context.SetRetrievingMethod(context.POST)
 
 	id := context.GetUID(ctx)
 
@@ -229,7 +229,7 @@ func UserChangeRoleHandler(ctx *gin.Context) {
 //
 // Response: An error message.
 func UserChangePasswordHandler(ctx *gin.Context) {
-	context.SetRetrievingMethod(context.GET)
+	context.SetRetrievingMethod(context.POST)
 
 	id := context.GetUID(ctx)
 
