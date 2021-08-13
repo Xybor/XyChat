@@ -20,14 +20,14 @@ func Route() *gin.Engine {
 	router.StaticFile("/", "vue/dist/index.html")
 	router.Static("/js", "vue/dist/js")
 	router.Static("/css", "vue/dist/css")
-	
+
 	router.NoRoute(ui1.StaticUIHandler)
 
 	rapi := router.Group("api")
 	rapi.Use(
 		middlewares.VerifyUserToken(true),
 		middlewares.ApplyAPIHeader,
-		middlewares.ApplyCORSHeader,
+		middlewares.ApplyCORSHeader(),
 	)
 	{
 		rapi1 := rapi.Group("v1")

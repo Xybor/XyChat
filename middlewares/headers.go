@@ -1,8 +1,10 @@
 package middlewares
 
 import (
-	"fmt"
+	"strings"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/xybor/xychat/helpers"
 )
@@ -14,14 +16,29 @@ func ApplyAPIHeader(c *gin.Context) {
 
 // ApplyCORSHeader adds the Access-Control-Allow-Origin to the header of
 // response.
-func ApplyCORSHeader(c *gin.Context) {
-	port, err := helpers.ReadEnv("CLIENT_PORT")
-	if err != nil {
-		port = ""
+func ApplyCORSHeader() gin.HandlerFunc {
+	domains, err := helpers.ReadEnv("CORS")
+	config := cors.Config{
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
+		AllowHeaders:     []string{"Origin"},
+		ExposeHeaders:    []string{"Content-Length", "Content-Type"},
+		AllowCredentials: true,
+		AllowWebSockets:  true,
+		MaxAge:           2 * time.Hour,
 	}
 
-	cors_url := fmt.Sprintf("%s://%s%s", helpers.MustReadEnv("SCHEMA"), helpers.MustReadEnv("CORS_DOMAIN"), port)
-	fmt.Println(cors_url)
-	c.Writer.Header().Add("Access-Control-Allow-Origin", cors_url)
-	c.Writer.Header().Add("Access-Control-Allow-Credentials", "true")
+	if err != nil {
+		config.AllowAllOrigins = true
+	} else {
+		domainList := strings.Split(domains, ";")
+
+		// Strip spaces
+		for i, d := range domainList {
+			domainList[i] = strings.Trim(d, " ")
+		}
+
+		config.AllowOrigins = domainList
+	}
+
+	return cors.New(config)
 }
