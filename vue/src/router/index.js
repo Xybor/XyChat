@@ -1,9 +1,11 @@
 import { createRouter, createWebHistory } from "vue-router";
-import { getJWTAuthenToken } from "../helpers/authen-token";
+import { getLoginStatus } from "../helpers/localStorageManager";
 import Home from "../views/Home.vue";
-// import Login from "../views/Login.vue";
-// import Profile from "../views/Profile.vue";
-// import Register from "../views/Register.vue";
+import Login from "../views/Login.vue";
+import Register from "../views/Register.vue";
+import Profile from "../views/Profile.vue";
+import Chat from "../views/Chat.vue";
+import ErrorPage from "../views/404.vue";
 
 const routes = [
   {
@@ -17,17 +19,26 @@ const routes = [
     // route level code-splitting
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "" */ "../views/Login.vue"),
+    component: Login,
   },
   {
     path: "/register",
     name: "Register",
-    component: () => import(/* webpackChunkName: "" */ "../views/Register.vue"),
+    component: Register,
   },
   {
     path: "/profile",
     name: "Profile",
-    component: () => import(/* webpackChunkName: "" */ "../views/Profile.vue"),
+    component: Profile,
+  },
+  {
+    path: "/chat",
+    name: "Chat",
+    component: Chat,
+  },
+  {
+    path: "/:pathMatch(.*)*",
+    component: ErrorPage,
   },
 ];
 
@@ -39,7 +50,7 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const publicPages = ["/", "/home", "/login", "/register"];
   const authenRequired = !publicPages.includes(to.path);
-  const loggedIn = getJWTAuthenToken();
+  const loggedIn = getLoginStatus();
 
   if (authenRequired && !loggedIn) {
     return next("/login");

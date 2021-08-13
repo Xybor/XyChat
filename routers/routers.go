@@ -1,10 +1,9 @@
 package routers
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 	api1 "github.com/xybor/xychat/controllers/api/v1"
+	ui1 "github.com/xybor/xychat/controllers/ui/v1"
 	ws1 "github.com/xybor/xychat/controllers/ws/v1"
 	"github.com/xybor/xychat/helpers/context"
 	"github.com/xybor/xychat/middlewares"
@@ -16,14 +15,19 @@ import (
 func Route() *gin.Engine {
 	router := gin.Default()
 
-	router.Use(middlewares.ApplyCORSHeader)
+	router.LoadHTMLGlob("vue/dist/*.html")
 
-	router.StaticFS("/ui", http.Dir("vue/dist"))
+	router.StaticFile("/", "vue/dist/index.html")
+	router.Static("/js", "vue/dist/js")
+	router.Static("/css", "vue/dist/css")
+	
+	router.NoRoute(ui1.StaticUIHandler)
 
 	rapi := router.Group("api")
 	rapi.Use(
 		middlewares.VerifyUserToken(true),
 		middlewares.ApplyAPIHeader,
+		middlewares.ApplyCORSHeader,
 	)
 	{
 		rapi1 := rapi.Group("v1")

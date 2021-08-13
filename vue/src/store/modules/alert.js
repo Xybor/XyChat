@@ -1,6 +1,7 @@
 const state = {
   type: null,
   message: null,
+  triggerAlert: false,
 };
 
 const actions = {
@@ -10,23 +11,18 @@ const actions = {
   error({ commit }, message) {
     commit("error", message);
   },
-  clear({ commit }) {
-    commit("clear");
-  },
 };
 
 const mutations = {
   success(state, message) {
-    state.type = "alert-success";
+    state.type = "success";
     state.message = message;
+    state.triggerAlert = !state.triggerAlert;
   },
   error(state, message) {
-    state.type = "alert-danger";
+    state.type = "error";
     state.message = message;
-  },
-  clear(state) {
-    state.type = null;
-    state.message = null;
+    state.triggerAlert = !state.triggerAlert;
   },
 };
 

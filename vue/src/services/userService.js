@@ -1,25 +1,17 @@
-import {
-  getJWTAuthenToken,
-  removeJWTtAuthenToken,
-  setJWTtAuthenToken,
-} from "../helpers/authen-token";
-import { configs } from "./config";
-
-import axios from "axios";
+import { axiosInstance } from "../helpers/getAxios";
 
 export const userSerive = {
   login,
-  logout,
   register,
   getProfile,
+  changePassword,
 };
 
 function login(username, password) {
   const params = new URLSearchParams();
   params.append("username", username);
   params.append("password", password);
-
-  return axios.get(`${configs.apiUrl}/auth`, { params: params });
+  return axiosInstance.post("/auth", params);
 }
 
 function register(username, password) {
@@ -27,15 +19,17 @@ function register(username, password) {
   params.append("username", username);
   params.append("password", password);
 
-  return axios.get(`${configs.apiUrl}/register`, { params: params });
+  return axiosInstance.post("/register", params);
 }
 
 function getProfile() {
-  const params = new URLSearchParams();
-  params.append("token", getJWTAuthenToken());
-  return axios.get(`${configs.apiUrl}/profile`, { params: params });
+  return axiosInstance.get("/profile");
 }
 
-function logout() {
-  removeJWTtAuthenToken();
+function changePassword(userId, oldpassword, newpassword) {
+  const params = new URLSearchParams();
+  params.append("oldpassword", oldpassword);
+  params.append("newpassword", newpassword);
+
+  return axiosInstance.put(`/users/${userId}/password`, params);
 }

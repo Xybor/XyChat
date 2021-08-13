@@ -18,13 +18,18 @@
           <li class="nav-item">
             <router-link class="nav-link" to="/">Home</router-link>
           </li>
-          <li class="nav-item" v-if="!status.loggedIn">
+          <li class="nav-item">
+            <router-link class="nav-link" to="/chat" v-if="isLoggedIn"
+              >Chat</router-link
+            >
+          </li>
+          <li class="nav-item" v-if="!isLoggedIn">
             <router-link class="nav-link" to="/login">Login</router-link>
           </li>
-          <li class="nav-item" v-if="!status.loggedIn">
+          <li class="nav-item" v-if="!isLoggedIn">
             <router-link class="nav-link" to="/register">Register</router-link>
           </li>
-          <li class="nav-item dropdown" v-if="status.loggedIn">
+          <li class="nav-item dropdown" v-if="isLoggedIn">
             <a
               class="nav-link dropdown-toggle"
               href="#"
@@ -33,7 +38,7 @@
               data-bs-toggle="dropdown"
               aria-expanded="false"
             >
-              Hi {{ user.username }}!
+              Hi {{ username }}!
             </a>
             <ul class="dropdown-menu" aria-labelledby="profile-user">
               <li>
@@ -52,13 +57,22 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { computed } from "vue";
+import { useStore } from "vuex";
 export default {
-  computed: {
-    ...mapState("account", ["status", "user"]),
-  },
-  methods: {
-    ...mapActions("account", ["logout"]),
+  setup() {
+    const store = useStore();
+    return {
+      isLoggedIn: computed(() => store.state.account.isLoggedIn),
+      username: computed(() => store.state.account.accountInfo.username),
+      logout: () => store.dispatch("account/logout"),
+    };
   },
 };
 </script>
+
+<style scoped>
+span {
+  cursor: pointer;
+}
+</style>

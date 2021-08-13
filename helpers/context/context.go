@@ -142,6 +142,6 @@ func SetCookie(ctx *gin.Context, name, value string, maxage int) {
 		"/",
 		helpers.MustReadEnv("DOMAIN"),
 		false,
-		true,
+		false,
 	)
 }
