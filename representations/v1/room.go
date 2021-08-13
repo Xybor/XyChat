@@ -1,5 +1,5 @@
 package v1
 
 type RoomRepresentation struct {
-	ID uint
+	ID uint `json:"id"`
 }

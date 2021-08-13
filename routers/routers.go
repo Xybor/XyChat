@@ -59,7 +59,8 @@ func Route() *gin.Engine {
 	{
 		rws1 := rws.Group("v1")
 		{
-			rws1.GET("match", ws1.MatchHandler)
+			rws1.GET("match", ws1.WSMatchHandler)
+			rws1.GET("chat", ws1.WSChatHandler)
 		}
 	}
 

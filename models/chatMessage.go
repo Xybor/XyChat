@@ -1,9 +1,7 @@
 package models
 
-import "gorm.io/gorm"
-
-type Chat struct {
-	gorm.Model
+type ChatMessage struct {
+	BaseModel
 	RoomID  uint `gorm:"not null"`
 	Room    Room
 	UserID  uint `gorm:"not null"`

@@ -2,6 +2,7 @@ package v1
 
 import (
 	"log"
+	"sync"
 
 	"github.com/gorilla/websocket"
 )
@@ -13,8 +14,14 @@ type wsClient struct {
 	ReadHandler  func(message []byte) error
 	CloseHandler func()
 
-	// Connection will be close if and only writeFlow is finished
+	// The channel signals the end of writeFlow. Client will be closed if and
+	// only if writeFlow had finished.
 	endOfWriteFlow chan bool
+
+	// A variable indicates that the wsClient has not closed and be able to
+	// write.
+	isSending      bool
+	isSendingMutex sync.Mutex
 }
 
 // Create a wsClient struct with the provided websocket connection.  It runs
@@ -30,11 +37,13 @@ type wsClient struct {
 // Before wsClient.readFlow finishes, it call wsClient.CloseHandler function.
 func CreateWSClient(conn *websocket.Conn) *wsClient {
 	wsc := wsClient{
-		conn:           conn,
-		send:           make(chan interface{}),
-		ReadHandler:    func(message []byte) error { return nil },
-		CloseHandler:   func() {},
-		endOfWriteFlow: make(chan bool),
+		conn:            conn,
+		send:            make(chan interface{}),
+		ReadHandler:     func(message []byte) error { return nil },
+		CloseHandler:    func() {},
+		endOfWriteFlow:  make(chan bool),
+		isSending:      true,
+		isSendingMutex: sync.Mutex{},
 	}
 
 	go wsc.readFlow()
@@ -73,8 +82,8 @@ func (wsc *wsClient) writeFlow() {
 	defer wsc.conn.Close()
 
 	for {
-		// The received message should be a struct or map.
 		msg, ok := <-wsc.send
+
 		if !ok {
 			break
 		}
@@ -88,14 +97,13 @@ func (wsc *wsClient) writeFlow() {
 			) {
 				log.Println(err)
 			}
-			break
 		}
 	}
 
 	wsc.endOfWriteFlow <- true
 }
 
-// WriteJSON send a message to wsClient.writeFlow via wsClient.send, the
+// WriteJSON sends a message to wsClient.writeFlow via wsClient.send, the
 // message should be a struct or map[string]interface{}
 func (wsc *wsClient) WriteJSON(data interface{}) {
 	wsc.send <- data

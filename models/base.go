@@ -108,7 +108,7 @@ func CreateTables(drop_if_exists bool) {
 			&User{},
 			&Room{},
 			&DetailedRoom{},
-			&Chat{},
+			&ChatMessage{},
 		)
 
 		if err != nil {
@@ -122,7 +122,7 @@ func CreateTables(drop_if_exists bool) {
 		&User{},
 		&Room{},
 		&DetailedRoom{},
-		&Chat{},
+		&ChatMessage{},
 	)
 
 	if err != nil {

@@ -2,21 +2,17 @@ package v1
 
 import "github.com/xybor/xychat/helpers/api"
 
-// NewEmptyAPIResponse creates a success and non-data API response.
-func NewEmptyAPIResponse() api.APIResponse {
-	meta := map[string]interface{}{
-		"version": 1,
-		"errno":   0,
-	}
-	return api.CreateAPIResponse(nil, &meta)
-}
-
 // NewAPIResponse creates a success API response with a data.
 func NewAPIResponse(data interface{}) api.APIResponse {
 	meta := map[string]interface{}{
 		"version": 1,
 		"errno":   0,
 	}
+
+	if data == nil {
+		return api.CreateAPIResponse(nil, &meta)
+	}
+
 	return api.CreateAPIResponse(&data, &meta)
 }
 

@@ -31,8 +31,8 @@ const (
 )
 
 type userService struct {
-	user         *models.User
-	isAuthorized bool
+	user     *models.User
+	isLoaded bool
 }
 
 // compareRole comapares two roles and return:
@@ -42,6 +42,8 @@ type userService struct {
 // + 0  if role1 = role2
 //
 // + 1  if role1 > role2
+//
+// @note: role1 and role2 must be a valid role
 func compareRole(role1 string, role2 string) int {
 	roleLevel1 := roleMap[role1]
 	roleLevel2 := roleMap[role2]
@@ -66,37 +68,47 @@ func isValidRole(role string) bool {
 	return false
 }
 
-// authorize reads the subject's data in this service from database and assign
-// it to userService.user
-func (us *userService) authorize() {
-	if !us.isAuthorized {
-		us.isAuthorized = true
-
-		if us.user == nil {
-			return
-		}
-
-		models.GetDB().First(us.user, us.user.ID)
-	}
-}
-
 // CreateUserService create a userService with the subject is the user having
 // given id.  If the parameter is nil, there is no subject in this service.
+//
+// @note: id must be nil or a valid id
 func CreateUserService(id *uint) userService {
 	if id == nil {
-		return userService{user: nil, isAuthorized: false}
+		return userService{user: nil, isLoaded: false}
 	}
 
 	user := models.User{BaseModel: models.BaseModel{ID: *id}}
 	return userService{
-		user:         &user,
-		isAuthorized: false,
+		user:     &user,
+		isLoaded: false,
+	}
+}
+
+// load gets data from database by id.  The user of userService must be able to
+// be loaded from the database or nil, otherwise, PANIC.
+func (us *userService) load() {
+	if us.isLoaded {
+		return
+	}
+
+	us.isLoaded = true
+
+	if us.user == nil {
+		return
+	}
+
+	err := models.GetDB().First(us.user, us.user.ID).Error
+
+	if err != nil {
+		log.Panicln(err)
 	}
 }
 
 // Register creates a user with given username and password.
 //
 // If the role is not member, a subject in service is required.
+//
+// @error: ErrorUnknownRole, ErrorPermission, ErrorExistedUsername, ErrorUnknown
 func (us *userService) Register(username, password, role string) error {
 	var user models.User
 
@@ -105,9 +117,13 @@ func (us *userService) Register(username, password, role string) error {
 	}
 
 	if role != RoleMember {
-		us.authorize()
+		us.load()
 
-		if us.user == nil || compareRole(*us.user.Role, role) != 1 {
+		if us.user == nil {
+			return ErrorPermission
+		}
+
+		if compareRole(*us.user.Role, role) != 1 {
 			return ErrorPermission
 		}
 	}
@@ -124,7 +140,6 @@ func (us *userService) Register(username, password, role string) error {
 			return ErrorExistedUsername
 		}
 
-		log.Println(err)
 		return ErrorUnknown
 	}
 
@@ -133,13 +148,15 @@ func (us *userService) Register(username, password, role string) error {
 
 // Remove deletes a user with a given id.  It needs a subject to determine the
 // permission.
+//
+// @error: ErrorPermission, ErrorUnknown
 func (us *userService) Remove(id uint) error {
 	if us.user == nil {
 		return ErrorPermission
 	}
 
 	if us.user.ID != id {
-		us.authorize()
+		us.load()
 
 		userRepresentation, err := us.Select(id)
 		if err != nil {
@@ -155,7 +172,6 @@ func (us *userService) Remove(id uint) error {
 
 	err := models.GetDB().Delete(&removedUser).Error
 	if err != nil {
-		log.Println(err)
 		return ErrorUnknown
 	}
 
@@ -164,12 +180,14 @@ func (us *userService) Remove(id uint) error {
 
 // RemoveByUsername deletes a user with a given name.  It needs a subject to
 // determine the permission.
+//
+// @error: ErrorPermission, ErrorUnknown
 func (us *userService) RemoveByUsername(username string) error {
+	us.load()
+
 	if us.user == nil {
 		return ErrorPermission
 	}
-
-	us.authorize()
 
 	userRepresentation, err := us.SelectByName(username)
 	if err != nil {
@@ -183,7 +201,6 @@ func (us *userService) RemoveByUsername(username string) error {
 
 	err = models.GetDB().Where("username=?", username).Delete(&models.User{}).Error
 	if err != nil {
-		log.Println(err)
 		return ErrorUnknown
 	}
 
@@ -192,6 +209,8 @@ func (us *userService) RemoveByUsername(username string) error {
 
 // Authenticate checks if the given username and password belongs to a user.
 // If yes, it returns a userRepresentation of that user.
+//
+// @error: ErrorFailedAuthentication, ErrorUnknown
 func (us *userService) Authenticate(
 	username, password string,
 ) (*representation.UserRepresentation, error) {
@@ -208,7 +227,6 @@ func (us *userService) Authenticate(
 			return nil, ErrorFailedAuthentication
 		}
 
-		log.Println(err)
 		return nil, ErrorUnknown
 	}
 
@@ -217,6 +235,8 @@ func (us *userService) Authenticate(
 
 // AuthenticateById is the same as Authenticate, except it uses id instead of
 // username.  It doesn't return userRepresentation.
+//
+// @error: ErrorFailedAuthentication, ErrorUnknown
 func (us *userService) AuthenticateById(
 	id uint, password string,
 ) (*representation.UserRepresentation, error) {
@@ -233,7 +253,6 @@ func (us *userService) AuthenticateById(
 			return nil, ErrorFailedAuthentication
 		}
 
-		log.Println(err)
 		return nil, ErrorUnknown
 	}
 
@@ -242,13 +261,15 @@ func (us *userService) AuthenticateById(
 
 // Select gets the userRepresentation of a given userid from database.  It
 // needs a subject in service to determine the permission.
+//
+// @error: ErrorPermission, ErrorUnknown
 func (us *userService) Select(id uint) (*representation.UserRepresentation, error) {
 	if us.user == nil {
 		return nil, ErrorPermission
 	}
 
 	if us.user.ID != id {
-		us.authorize()
+		us.load()
 
 		if *us.user.Role != RoleModifier && *us.user.Role != RoleAdmin {
 			return nil, ErrorPermission
@@ -262,7 +283,6 @@ func (us *userService) Select(id uint) (*representation.UserRepresentation, erro
 		Scan(&userRepresentation).Error
 
 	if err != nil {
-		log.Println(err)
 		return nil, ErrorUnknown
 	}
 
@@ -275,6 +295,8 @@ func (us *userService) Select(id uint) (*representation.UserRepresentation, erro
 
 // SelectByUsername gets the userRepresentation of a given name from database.  It
 // needs a subject in service to determine the permission.
+//
+// @error: ErrorPermission, ErrorUnknown
 func (us *userService) SelectByName(username string) (*representation.UserRepresentation, error) {
 	if us.user == nil {
 		return nil, ErrorPermission
@@ -288,7 +310,6 @@ func (us *userService) SelectByName(username string) (*representation.UserRepres
 		Scan(&userRepresentation).Error
 
 	if err != nil {
-		log.Println(err)
 		return nil, ErrorUnknown
 	}
 
@@ -301,6 +322,8 @@ func (us *userService) SelectByName(username string) (*representation.UserRepres
 }
 
 // SelfSelect is a shortcut of us.Select(us.user.ID).
+//
+// @error: ErrorPermission, ErrorUnknown
 func (us *userService) SelfSelect() (*representation.UserRepresentation, error) {
 	if us.user == nil {
 		return nil, ErrorPermission
@@ -311,6 +334,8 @@ func (us *userService) SelfSelect() (*representation.UserRepresentation, error) 
 
 // UpdateInfo updates age and gender for a specific user determined by id.  It
 // needs a subject in the service to determine permission.
+//
+// @error: ErrorPermission, ErrorUnknown
 func (us *userService) UpdateInfo(
 	id uint,
 	age *uint,
@@ -321,7 +346,7 @@ func (us *userService) UpdateInfo(
 	}
 
 	if us.user.ID != id {
-		us.authorize()
+		us.load()
 
 		r, err := us.Select(id)
 		if err != nil {
@@ -342,7 +367,6 @@ func (us *userService) UpdateInfo(
 	).Error
 
 	if err != nil {
-		log.Println(err)
 		return ErrorUnknown
 	}
 
@@ -351,13 +375,20 @@ func (us *userService) UpdateInfo(
 
 // UpdateRole updates role for a specific user determined by id.  It needs a
 // subject in the service to determine permission.
+//
+// @error: ErrorUnknownRole, ErrorPermission, ErrorUnknown
 func (us *userService) UpdateRole(id uint, role string) error {
 	if !isValidRole(role) {
 		return ErrorUnknownRole
 	}
 
-	us.authorize()
-	if us.user == nil || compareRole(*us.user.Role, role) != 1 {
+	us.load()
+
+	if us.user == nil {
+		return ErrorPermission
+	}
+
+	if compareRole(*us.user.Role, role) != 1 {
 		return ErrorPermission
 	}
 
@@ -378,7 +409,6 @@ func (us *userService) UpdateRole(id uint, role string) error {
 	).Error
 
 	if err != nil {
-		log.Println(err)
 		return ErrorUnknown
 	}
 
@@ -389,6 +419,8 @@ func (us *userService) UpdateRole(id uint, role string) error {
 // needs a subject in the service to determine permission.  If the user change
 // his password, he needs to provide oldpwd.  If the admin or mod changes the
 // password of another, he doesn't need to provide oldpwd.
+//
+// @error: ErrorInvalidOldPassword, ErrorPermission, ErrorUnknown
 func (us *userService) UpdatePassword(id uint, oldpwd *string, newpwd string) error {
 	if us.user == nil {
 		return ErrorPermission
@@ -404,7 +436,7 @@ func (us *userService) UpdatePassword(id uint, oldpwd *string, newpwd string) er
 			return ErrorInvalidOldPassword
 		}
 	} else {
-		us.authorize()
+		us.load()
 		userRepresentation, err := us.Select(id)
 		if err != nil {
 			return err
@@ -423,9 +455,24 @@ func (us *userService) UpdatePassword(id uint, oldpwd *string, newpwd string) er
 	).Error
 
 	if err != nil {
-		log.Println(err)
 		return ErrorUnknown
 	}
 
 	return nil
+}
+
+// LoadRooms retrieves all rooms which this user joined,  these rooms will be
+// store in us.user.Rooms
+//
+// @error: ErrorPermission
+func (us *userService) LoadRooms() error {
+	us.load()
+
+	if us.user == nil {
+		return ErrorPermission
+	}
+
+	err := models.GetDB().Model(us.user).Association("Rooms").Find(&us.user.Rooms)
+
+	return err
 }

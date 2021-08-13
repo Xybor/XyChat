@@ -43,7 +43,7 @@ func UserRegisterHandler(ctx *gin.Context) {
 		return
 	}
 
-	response := apihelper.NewEmptyAPIResponse()
+	response := apihelper.NewAPIResponse(nil)
 	ctx.JSON(http.StatusAccepted, response)
 }
 
@@ -87,7 +87,7 @@ func UserAuthenticateHandler(ctx *gin.Context) {
 	dayTime := 24 * 60 * 60
 	context.SetCookie(ctx, "xytok", token, dayTime)
 
-	response := apihelper.NewEmptyAPIResponse()
+	response := apihelper.NewAPIResponse(nil)
 	ctx.JSON(http.StatusAccepted, response)
 }
 
@@ -181,7 +181,7 @@ func UserPUTHandler(ctx *gin.Context) {
 		return
 	}
 
-	response := apihelper.NewEmptyAPIResponse()
+	response := apihelper.NewAPIResponse(nil)
 	ctx.JSON(http.StatusOK, response)
 }
 
@@ -214,7 +214,7 @@ func UserChangeRoleHandler(ctx *gin.Context) {
 		return
 	}
 
-	response := apihelper.NewEmptyAPIResponse()
+	response := apihelper.NewAPIResponse(nil)
 	ctx.JSON(http.StatusOK, response)
 }
 
@@ -251,6 +251,6 @@ func UserChangePasswordHandler(ctx *gin.Context) {
 		return
 	}
 
-	response := apihelper.NewEmptyAPIResponse()
+	response := apihelper.NewAPIResponse(nil)
 	ctx.JSON(http.StatusOK, response)
 }
