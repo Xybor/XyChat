@@ -9,7 +9,9 @@
             alt="avatar"
           />
           <div class="mt-3">
-            <span><b>Huy Gay</b></span>
+            <span
+              ><b>{{ profile.fname }} {{ profile.lname }}</b></span
+            >
             <br />
             <span class="text-muted">@{{ profile.username }}</span>
           </div>
@@ -22,24 +24,35 @@
             <div class="col-6">
               <div class="form-group">
                 <label for="firstname">First name</label>
-                <input type="text" class="form-control" id="firstname" />
+                <input
+                  type="text"
+                  class="form-control"
+                  id="firstname"
+                  v-model="profile.fname"
+                />
               </div>
             </div>
 
             <div class="col-6">
               <div class="form-group">
                 <label for="lastname">Last name</label>
-                <input type="text" class="form-control" id="lastname" />
+                <input
+                  type="text"
+                  class="form-control"
+                  id="lastname"
+                  v-model="profile.lname"
+                />
               </div>
             </div>
           </div>
 
           <div class="form-group mt-2">
-            <label for="exampleFormControlInput1">Role</label>
-            <select class="form-select" aria-label="Default select example">
-              <option value="1" selected>One</option>
-              <option value="2">Two</option>
-              <option value="3">Three</option>
+            <label for="exampleFormControlInput1">Gender</label>
+            <select class="form-select" v-model="profile.gender">
+              <option value="0"></option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
             </select>
           </div>
 
@@ -51,7 +64,7 @@
           <div class="form-group">
             <label for="oldPassword">Old password</label>
             <input
-              type="email"
+              type="password"
               class="form-control"
               id="oldPassword"
               placeholder="********"
@@ -62,7 +75,7 @@
           <div class="form-group mt-2">
             <label for="newPassword">New password</label>
             <input
-              type="email"
+              type="password"
               class="form-control"
               id="newPassword"
               placeholder="********"
@@ -73,7 +86,7 @@
           <div class="form-group mt-2">
             <label for="verifyPassword">Verify new password</label>
             <input
-              type="email"
+              type="password"
               class="form-control"
               id="verifyPassword"
               placeholder="********"
@@ -93,9 +106,16 @@
 <script>
 import { userSerive } from "../services/userService";
 import { ref, onMounted } from "vue";
+import { useStore } from "vuex";
 export default {
   setup() {
-    const profile = ref({});
+    const store = useStore();
+    const profile = ref({
+      fname: "fname",
+      lname: "lname",
+      gender: "0",
+      ...store.state.account.accountInfo,
+    });
     const password = ref({
       oldPassword: "",
       newPassword: "",
@@ -105,8 +125,10 @@ export default {
     const getProfile = () => {
       const rs = userSerive.getProfile();
       rs.then((response) => {
-        console.log(response.data.data);
-        profile.value = response.data.data;
+        profile.value = {
+          ...profile.value,
+          ...response.data.data,
+        };
       });
     };
 
@@ -115,11 +137,36 @@ export default {
     });
 
     var changeProfile = () => {};
-    var changePassword = () => {};
+    var changePassword = () => {
+      if (password.value.newPassword != password.value.verifyPassword) {
+        store.dispatch("alert/error", "Passwords don't match");
+      } else {
+        const rs = userSerive.changePassword(
+          profile.value.id,
+          password.value.oldPassword,
+          password.value.newPassword
+        );
+        rs.then((response) => {
+          if (response.data.meta.errno == 0) {
+            store.dispatch("alert/success", "Password has been changed");
+            password.value = {
+              oldPassword: "",
+              newPassword: "",
+              verifyPassword: "",
+            };
+          } else {
+            store.dispatch("alert/error", "The current password is incorrect");
+          }
+        }).catch((err) => {
+          store.dispatch("alert/error", "Something went wrong");
+        });
+      }
+    };
 
     return {
       profile,
       password,
+      changePassword,
     };
   },
 };

@@ -3,6 +3,9 @@
 github.com/dgrijalva/jwt-go
 # github.com/gin-contrib/sse v0.1.0
 github.com/gin-contrib/sse
+# github.com/gin-contrib/static v0.0.1
+## explicit
+github.com/gin-contrib/static
 # github.com/gin-gonic/gin v1.7.2
 ## explicit
 github.com/gin-gonic/gin

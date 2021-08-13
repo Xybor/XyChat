@@ -10,6 +10,7 @@ import Navbar from "@/components/Navbar.vue";
 import { useStore } from "vuex";
 import { useToast } from "vue-toastification";
 import { onMounted } from "vue";
+import { userSerive } from "./services/userService";
 
 export default {
   components: {
@@ -49,6 +50,10 @@ export default {
           deep: true,
         }
       );
+
+      if (store.state.account.isLoggedIn) {
+        store.dispatch("account/checkToken");
+      }
     });
   },
 };

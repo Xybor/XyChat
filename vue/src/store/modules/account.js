@@ -1,52 +1,52 @@
 import {
-  getJWTAuthenToken,
-  setJWTtAuthenToken,
-  getUsername,
-  setUsername,
-} from "../../helpers/authen-token";
+  getAccountInfo,
+  getLoginStatus,
+  setAccountInfo,
+  setLogin,
+  setLogout,
+} from "../../helpers/localStorageManager";
 import { userSerive } from "../../services/userService";
 import router from "../../router";
 
-const savedToken = getJWTAuthenToken();
-const savedUsername = getUsername();
-const state = savedToken
+const isLogin = getLoginStatus();
+const state = isLogin
   ? {
       isLoggedIn: true,
-      token: savedToken,
-      username: savedUsername,
-      registering: false,
+      accountInfo: getAccountInfo(),
     }
   : {
       isLoggedIn: false,
-      token: null,
-      username: null,
-      registering: false,
+      accountInfo: {
+        username: null,
+        id: 0,
+      },
     };
+
 const actions = {
   login({ dispatch, commit }, { username, password }) {
     commit("loginRequest", { token: null, username: username });
     var rs = userSerive.login(username, password);
     rs.then((response) => {
-      const data = response.data.data;
-      console.log(data);
-      if (data.token) {
-        const revicedToken = data.token;
+      if (response.data.meta.errno == 0) {
+        // Login Success
+        setLogin();
+        setAccountInfo(0, username);
 
-        setJWTtAuthenToken(revicedToken);
-        setUsername(username);
         commit("loginSuccess", {
-          token: revicedToken,
+          id: 0,
           username: username,
         });
         dispatch("alert/success", "Login successfully", { root: true });
         router.push("/profile");
       } else {
+        // Login fail
         commit("loginFailure");
         dispatch("alert/error", "Login Fail", { root: true });
       }
     }).catch((err) => {
+      // Login error
       commit("loginFailure");
-      dispatch("alert/error", "Login Fail", { root: true });
+      dispatch("alert/error", "Something went wrong", { root: true });
     });
   },
   register({ dispatch, commit }, { username, password }) {
@@ -63,41 +63,71 @@ const actions = {
   logout({ dispatch, commit }) {
     commit("logout");
     router.push("/");
-
-    userSerive.logout();
+    setLogout();
     dispatch("alert/success", "Logout success", { root: true });
+  },
+  checkToken({ dispatch, commit }) {
+    const rs = userSerive.getProfile();
+    rs.then((response) => {
+      console.log(response);
+      if (response.data.meta.errno == 0) {
+        commit("updateAccountInfo", {
+          id: response.data.data.id,
+        });
+        dispatch("alert/success", "Check session successfully", { root: true });
+      } else {
+        dispatch("alert/error", "Session is expired", { root: true });
+        router.push("/login");
+        setLogout();
+      }
+    }).catch((err) => {
+      dispatch("alert/error", "Something went wrong", { root: true });
+      router.push("/login");
+      setLogout();
+    });
   },
 };
 
 const mutations = {
   loginRequest(state, data) {
     state.isLoggedIn = true;
-    state.username = data.username;
-    state.token = null;
+    state.accountInfo = {
+      username: data.username,
+      id: data.id,
+    };
   },
   loginSuccess(state, data) {
     state.isLoggedIn = true;
-    state.username = data.username;
-    state.token = data.token;
+    state.accountInfo = {
+      ...state.accountInfo,
+      data,
+    };
   },
   loginFailure(state) {
     state.isLoggedIn = false;
-    state.username = null;
-    state.token = null;
+    state.accountInfo = null;
   },
   logout(state) {
     state.isLoggedIn = false;
-    state.username = null;
-    state.token = null;
+    state.accountInfo = null;
   },
   registerRequest(state) {
-    state.registering = true;
+    state.isLoggedIn = false;
+    state.accountInfo = null;
   },
   registerSuccess(state) {
-    state.registering = true;
+    state.isLoggedIn = false;
+    state.accountInfo = null;
   },
   registerFailure(state) {
-    state.registering = false;
+    state.isLoggedIn = false;
+    state.accountInfo = null;
+  },
+  updateAccountInfo(state, accountInfo) {
+    state.account = {
+      ...state.account,
+      accountInfo,
+    };
   },
 };
 

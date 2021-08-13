@@ -1,4 +1,4 @@
-let currentHost = window.location.host;
+var currentHost = window.location.host;
 if (process.env.NODE_ENV == "development") {
   currentHost = `${window.location.hostname}:1999`;
 }

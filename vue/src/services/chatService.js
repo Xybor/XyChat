@@ -1,5 +1,5 @@
 import axios from "axios";
-import { configs } from "./config";
+import { configs } from "../helpers/config";
 
 export const chatService = {
   match,
@@ -8,6 +8,10 @@ export const chatService = {
 function match() {
   const ws = new WebSocket(`${configs.wsUrl}/match`);
   ws.onopen = (e) => {
+    console.log(e.data);
+  };
+
+  ws.onmessage = (e) => {
     console.log(e.data);
   };
 }

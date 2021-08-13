@@ -10,5 +10,6 @@ func ApplyAPIHeader(c *gin.Context) {
 // ApplyCORSHeader adds the Access-Control-Allow-Origin to the header of
 // response.
 func ApplyCORSHeader(c *gin.Context) {
-	c.Writer.Header().Add("Access-Control-Allow-Origin", "*")
+	c.Writer.Header().Add("Access-Control-Allow-Origin", "http://localhost:3000")
+	c.Writer.Header().Add("Access-Control-Allow-Credentials", "true")
 }

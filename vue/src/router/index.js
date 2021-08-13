@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
-import { getJWTAuthenToken } from "../helpers/authen-token";
+import { getLoginStatus } from "../helpers/localStorageManager";
 import Home from "../views/Home.vue";
 
 const routes = [
@@ -32,8 +32,7 @@ const routes = [
     component: () => import("../views/Chat.vue"),
   },
   {
-    path: "/404",
-    name: "404",
+    path: "/:pathMatch(.*)*",
     component: () => import("../views/404.vue"),
   },
 ];
@@ -46,7 +45,7 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const publicPages = ["/", "/home", "/login", "/register"];
   const authenRequired = !publicPages.includes(to.path);
-  const loggedIn = getJWTAuthenToken();
+  const loggedIn = getLoginStatus();
 
   if (authenRequired && !loggedIn) {
     return next("/login");

@@ -64,7 +64,7 @@ export default {
     const store = useStore();
     return {
       isLoggedIn: computed(() => store.state.account.isLoggedIn),
-      username: computed(() => store.state.account.username),
+      username: computed(() => store.state.account.accountInfo.username),
       logout: () => store.dispatch("account/logout"),
     };
   },

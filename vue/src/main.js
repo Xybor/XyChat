@@ -1,12 +1,11 @@
 import { createApp } from "vue";
 import App from "./App.vue";
-import { Vuex } from "vuex";
 import router from "./router";
 import { store } from "./store/index";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap";
-import "../assets/css/main.css";
+import "./assets/css/main.css";
 
 import Toast from "vue-toastification";
 // Import the CSS or use your own!
