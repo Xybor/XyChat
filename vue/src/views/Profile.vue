@@ -129,7 +129,7 @@ export default {
           ...profile.value,
           ...response.data.data,
         };
-      });
+      }).catch((err) => {});
     };
 
     onMounted(() => {

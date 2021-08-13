@@ -11,5 +11,3 @@ export const configs = {
   apiUrl: `${apiSchema}//${currentHost}/api/v1`,
   wsUrl: `${wsSchema}://${currentHost}/ws/v1`,
 };
-
-console.log(configs);

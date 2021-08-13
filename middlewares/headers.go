@@ -1,6 +1,11 @@
 package middlewares
 
-import "github.com/gin-gonic/gin"
+import (
+	"fmt"
+
+	"github.com/gin-gonic/gin"
+	"github.com/xybor/xychat/helpers"
+)
 
 // ApplyAPIHeader adds some headers for API response.
 func ApplyAPIHeader(c *gin.Context) {
@@ -10,6 +15,7 @@ func ApplyAPIHeader(c *gin.Context) {
 // ApplyCORSHeader adds the Access-Control-Allow-Origin to the header of
 // response.
 func ApplyCORSHeader(c *gin.Context) {
-	c.Writer.Header().Add("Access-Control-Allow-Origin", "http://localhost:3000")
+	cors_url := fmt.Sprintf("%s://%s%s", helpers.MustReadEnv("SCHEMA"), helpers.MustReadEnv("DOMAIN"), helpers.MustReadEnv("CLIENT_PORT"))
+	c.Writer.Header().Add("Access-Control-Allow-Origin", cors_url)
 	c.Writer.Header().Add("Access-Control-Allow-Credentials", "true")
 }
