@@ -1,6 +1,11 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { getLoginStatus } from "../helpers/localStorageManager";
 import Home from "../views/Home.vue";
+import Login from "../views/Login.vue";
+import Register from "../views/Register.vue";
+import Profile from "../views/Profile.vue";
+import Chat from "../views/Chat.vue";
+import ErrorPage from "../views/404.vue";
 
 const routes = [
   {
@@ -14,26 +19,26 @@ const routes = [
     // route level code-splitting
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
-    component: () => import("../views/Login.vue"),
+    component: Login,
   },
   {
     path: "/register",
     name: "Register",
-    component: () => import("../views/Register.vue"),
+    component: Register,
   },
   {
     path: "/profile",
     name: "Profile",
-    component: () => import("../views/Profile.vue"),
+    component: Profile,
   },
   {
     path: "/chat",
     name: "Chat",
-    component: () => import("../views/Chat.vue"),
+    component: Chat,
   },
   {
     path: "/:pathMatch(.*)*",
-    component: () => import("../views/404.vue"),
+    component: ErrorPage,
   },
 ];
 
