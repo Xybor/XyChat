@@ -72,7 +72,7 @@ func UserAuthenticateHandler(ctx *gin.Context) {
 	}
 
 	// Create a token with the expired duration is 24 hours
-	userToken := tokens.CreateUserToken(userRepresentation.ID, 5*time.Second)
+	userToken := tokens.CreateUserToken(userRepresentation.ID, 24*time.Hour)
 
 	token, err := userToken.Generate()
 	if err != nil {
