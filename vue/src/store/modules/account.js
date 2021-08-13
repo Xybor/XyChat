@@ -1,44 +1,52 @@
 import {
-  getJWTAuthenToken,
-  setJWTtAuthenToken,
-  getUsername,
-  setUsername,
-} from "../../helpers/authen-token";
+  getAccountInfo,
+  getLoginStatus,
+  setAccountInfo,
+  setLogin,
+  setLogout,
+} from "../../helpers/localStorageManager";
 import { userSerive } from "../../services/userService";
 import router from "../../router";
 
-const savedToken = getJWTAuthenToken();
-const savedUsername = getUsername();
-const state = savedToken
+const isLogin = getLoginStatus();
+const state = isLogin
   ? {
-      status: { loggedIn: true },
-      user: { token: savedToken, username: savedUsername },
+      isLoggedIn: true,
+      accountInfo: getAccountInfo(),
     }
-  : { status: { loggedIn: false }, user: null };
+  : {
+      isLoggedIn: false,
+      accountInfo: {
+        username: null,
+        id: 0,
+      },
+    };
+
 const actions = {
   login({ dispatch, commit }, { username, password }) {
     commit("loginRequest", { token: null, username: username });
     var rs = userSerive.login(username, password);
     rs.then((response) => {
-      const data = response.data.data;
-      if (data.token) {
-        const revicedToken = data.token;
-        const revicedUsername = data.username;
+      if (response.data.meta.errno == 0) {
+        // Login Success
+        setLogin();
+        setAccountInfo(0, username);
 
-        setJWTtAuthenToken(revicedToken);
-        setUsername(revicedUsername);
-        router.push("/profile");
         commit("loginSuccess", {
-          token: revicedToken,
-          username: revicedUsername,
+          id: 0,
+          username: username,
         });
+        dispatch("alert/success", "Login successfully", { root: true });
+        router.push("/profile");
       } else {
+        // Login fail
         commit("loginFailure");
         dispatch("alert/error", "Login Fail", { root: true });
       }
     }).catch((err) => {
+      // Login error
       commit("loginFailure");
-      dispatch("alert/error", "Login Fail", { root: true });
+      dispatch("alert/error", "Something went wrong", { root: true });
     });
   },
   register({ dispatch, commit }, { username, password }) {
@@ -46,7 +54,7 @@ const actions = {
     var rs = userSerive.register(username, password);
     rs.then((response) => {
       commit("registerSuccess");
-      dispatch("alert/success", "Register success fully", { root: true });
+      dispatch("alert/success", "Register successfully", { root: true });
     }).catch((err) => {
       commit("registerFailure");
       dispatch("alert/error", "Register fail", { root: true });
@@ -55,35 +63,73 @@ const actions = {
   logout({ dispatch, commit }) {
     commit("logout");
     router.push("/");
-    userSerive.logout();
+    setLogout();
+    dispatch("alert/success", "Logout success", { root: true });
+  },
+  checkToken({ dispatch, commit }) {
+    const rs = userSerive.getProfile();
+    rs.then((response) => {
+      console.log(response);
+      if (response.data.meta.errno == 0) {
+        commit("updateAccountInfo", {
+          id: response.data.data.id,
+        });
+        dispatch("alert/success", "Check session successfully", { root: true });
+      } else {
+        dispatch("alert/error", "Session is expired", { root: true });
+        commit("logout");
+        setLogout();
+        router.push("/login");
+      }
+    }).catch((err) => {
+      dispatch("alert/error", "Something went wrong", { root: true });
+      commit("logout");
+      setLogout();
+      router.push("/login");
+    });
   },
 };
 
 const mutations = {
-  loginRequest(state, user) {
-    state.status = { loggedIn: true };
-    state.user = user;
+  loginRequest(state, data) {
+    state.isLoggedIn = true;
+    state.accountInfo = {
+      username: data.username,
+      id: data.id,
+    };
   },
-  loginSuccess(state, user) {
-    state.status = { loggedIn: true };
-    state.user = user;
+  loginSuccess(state, data) {
+    state.isLoggedIn = true;
+    state.accountInfo = {
+      ...state.accountInfo,
+      ...data,
+    };
   },
   loginFailure(state) {
-    state.status = { loggedIn: false };
-    state.user = null;
+    state.isLoggedIn = false;
+    state.accountInfo = null;
   },
   logout(state) {
-    state.status = { loggedIn: false };
-    state.user = null;
+    state.isLoggedIn = false;
+    state.accountInfo = null;
   },
-  registerRequest(state, user) {
-    state.status = { registering: true };
+  registerRequest(state) {
+    state.isLoggedIn = false;
+    state.accountInfo = null;
   },
-  registerSuccess(state, user) {
-    state.status = { registering: false };
+  registerSuccess(state) {
+    state.isLoggedIn = false;
+    state.accountInfo = null;
   },
-  registerFailure(state, error) {
-    state.status = { registering: false };
+  registerFailure(state) {
+    state.isLoggedIn = false;
+    state.accountInfo = null;
+  },
+  updateAccountInfo(state, accountInfo) {
+    state.account = {
+      ...state.account,
+      ...accountInfo,
+    };
   },
 };
 
