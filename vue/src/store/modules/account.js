@@ -77,13 +77,15 @@ const actions = {
         dispatch("alert/success", "Check session successfully", { root: true });
       } else {
         dispatch("alert/error", "Session is expired", { root: true });
-        router.push("/login");
+        commit("logout");
         setLogout();
+        router.push("/login");
       }
     }).catch((err) => {
       dispatch("alert/error", "Something went wrong", { root: true });
-      router.push("/login");
+      commit("logout");
       setLogout();
+      router.push("/login");
     });
   },
 };
@@ -100,7 +102,7 @@ const mutations = {
     state.isLoggedIn = true;
     state.accountInfo = {
       ...state.accountInfo,
-      data,
+      ...data,
     };
   },
   loginFailure(state) {
@@ -126,7 +128,7 @@ const mutations = {
   updateAccountInfo(state, accountInfo) {
     state.account = {
       ...state.account,
-      accountInfo,
+      ...accountInfo,
     };
   },
 };
