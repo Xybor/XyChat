@@ -15,7 +15,13 @@ func ApplyAPIHeader(c *gin.Context) {
 // ApplyCORSHeader adds the Access-Control-Allow-Origin to the header of
 // response.
 func ApplyCORSHeader(c *gin.Context) {
-	cors_url := fmt.Sprintf("%s://%s%s", helpers.MustReadEnv("SCHEMA"), helpers.MustReadEnv("DOMAIN"), helpers.MustReadEnv("CLIENT_PORT"))
+	port, err := helpers.ReadEnv("CLIENT_PORT")
+	if err != nil {
+		port = ""
+	}
+
+	cors_url := fmt.Sprintf("%s://%s%s", helpers.MustReadEnv("SCHEMA"), helpers.MustReadEnv("CORS_DOMAIN"), port)
+	fmt.Println(cors_url)
 	c.Writer.Header().Add("Access-Control-Allow-Origin", cors_url)
 	c.Writer.Header().Add("Access-Control-Allow-Credentials", "true")
 }
