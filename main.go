@@ -40,6 +40,17 @@ func main() {
 		servicev1.InitializeMatchQueue(60 * time.Second)
 
 		router := routers.Route()
-		router.Run(":" + helpers.MustReadEnv("PORT"))
+
+		addr := ":" + helpers.MustReadEnv("PORT")
+
+		TLS, err := helpers.ReadEnv("TLS")
+
+		if err != nil {
+			log.Fatal(router.Run(addr))
+		} else {
+			crt := TLS + ".crt"
+			key := TLS + ".key"
+			log.Fatal(router.RunTLS(addr, crt, key))
+		}
 	}
 }

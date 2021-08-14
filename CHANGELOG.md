@@ -1,12 +1,15 @@
 # Change logs
 
-# Alpha.0.0.5
+# Alpha.0.5
+## Alpha.0.5.1
 - Add chat feature with websocket at `/ws/v1/chat`.
 - Allow CORS by using environment variable.
 - Split README.md into many files.
+## Alpha.0.5.2
+- Use TLS environment variable to dynamically enable HTTPS method.
 
-# Alpha.0.0.4
 
+# Alpha.0.4
 - Modify general machanism in services.
 - Add some GET and PUT APIs in `/api/v1/users/:id/*`.
 - Add FEATURES.md for listing all APIs and WSes in the application.
@@ -18,14 +21,14 @@
 - Now it is possible to deploy on Heroku.
 - Add vendor.
 
-# Alpha.0.0.3
+# Alpha.0.3
 
 - Add matching feature with websocket at `/ws/v1/match`
 
-# Alpha.0.0.2
+# Alpha.0.2
 
 - Add docker container.
 
-# Alpha.0.0.1
+# Alpha.0.1
 
 - Add three APIs: `/api/v1/[auth|register|profile]`.
