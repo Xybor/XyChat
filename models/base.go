@@ -13,7 +13,7 @@ import (
 )
 
 type BaseModel struct {
-	ID uint `gorm:"primaryKey"`
+	ID        uint `gorm:"primaryKey"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -92,7 +92,7 @@ func InitializeDB() {
 		log.Panicln(err)
 	}
 
-	fmt.Println("[Xychat] Connecting to database success")
+	log.Println("[Xychat] Connecting to database success")
 }
 
 // Get the current db struct

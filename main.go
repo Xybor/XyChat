@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/xybor/xychat/helpers"
 	"github.com/xybor/xychat/models"
 	"github.com/xybor/xychat/routers"
@@ -26,6 +27,7 @@ func main() {
 	flag.Parse()
 
 	if *dotenv {
+		// Load environment variables in .env file
 		helpers.LoadEnv()
 	}
 
@@ -45,6 +47,10 @@ func main() {
 	}
 
 	if *run {
+		// xychat = test, debug or release
+		xychat := helpers.ReadEnvDefault("XYCHAT", "release")
+		gin.SetMode(xychat)
+
 		servicev1.InitializeMatchQueue(60 * time.Second)
 
 		router := routers.Route()
