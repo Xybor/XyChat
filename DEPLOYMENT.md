@@ -75,10 +75,11 @@ Reset the database
 Xychat$ main -reset
 ```
 
-Create an admin account with username `root` and password `pass`
+Create an admin account with the username and password is stored in ADMIN
+environment variable.  The form of that variable must be `<username>:<password>`
 
 ```shell
-Xychat$ main -admin root:pass
+Xychat$ main -admin ADMIN
 ```
 
 Use the .env file instead of environment variables

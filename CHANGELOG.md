@@ -7,6 +7,7 @@
 - Split README.md into many files.
 ## Alpha.0.5.2
 - Use TLS environment variable to dynamically enable HTTPS method.
+- Use environment variable to set admin user.
 
 
 # Alpha.0.4

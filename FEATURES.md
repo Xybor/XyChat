@@ -18,5 +18,5 @@
 ## v1
 |Created version|Last update|URL|Query Parameters|Behavior|
 |----|----|-------------|----------------|---------------------|
-|Alpha.0.0.3|Alpha.0.0.5|`match`|`%xytok`|Return the room info or an error.|
-|Alpha.0.0.5|Alpha.0.0.5|`chat`|`%xytok`|A channel for exchange chat messages.
+|Alpha.0.0.3|Alpha.0.0.4|`match`|`%xytok`|Return the room info or an error.|
+|Alpha.0.0.5|Alpha.0.0.5|`chat`|`%xytok`|A channel for exchanging chat messages.|

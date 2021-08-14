@@ -15,7 +15,11 @@ import (
 
 func main() {
 	reset := flag.Bool("reset", false, "Drop all tables before auto-migrating")
-	admin := flag.String("admin", "", "Create an admin user with format username:password")
+	admin := flag.String(
+		"admin",
+		"",
+		"Create an admin user using an environment variable. Set the name of that variable here.",
+	)
 	run := flag.Bool("run", false, "Run the server")
 	dotenv := flag.Bool("dotenv", false, "Load environment variables from .env file")
 
@@ -29,10 +33,14 @@ func main() {
 	models.CreateTables(*reset)
 
 	if *admin != "" {
-		credentials := strings.Split(*admin, ":")
+		data := helpers.MustReadEnv(*admin)
+
+		credentials := strings.Split(data, ":")
+
 		if len(credentials) != 2 {
 			log.Fatalln("Invalid admin credentials")
 		}
+
 		seeds.SeedAdminUser(credentials[0], credentials[1])
 	}
 
