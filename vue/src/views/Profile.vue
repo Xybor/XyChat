@@ -107,6 +107,8 @@
 import { userSerive } from "../services/userService";
 import { ref, onMounted } from "vue";
 import { useStore } from "vuex";
+import { capitalizeFirstLetter } from "../helpers/stringUtils";
+
 export default {
   setup() {
     const store = useStore();
@@ -155,10 +157,15 @@ export default {
               verifyPassword: "",
             };
           } else {
-            store.dispatch("alert/error", "The current password is incorrect");
+            store.dispatch("alert/error", response.data.meta.error);
           }
         }).catch((err) => {
-          store.dispatch("alert/error", "Something went wrong");
+          if (err.response) {
+            store.dispatch(
+              "alert/error",
+              capitalizeFirstLetter(err.response.data.meta.error)
+            );
+          }
         });
       }
     };

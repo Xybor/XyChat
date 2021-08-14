@@ -7,6 +7,7 @@ import {
 } from "../../helpers/localStorageManager";
 import { userSerive } from "../../services/userService";
 import router from "../../router";
+import { capitalizeFirstLetter } from "../../helpers/stringUtils";
 
 const isLogin = getLoginStatus();
 const state = isLogin
@@ -27,37 +28,51 @@ const actions = {
     commit("loginRequest", { token: null, username: username });
     var rs = userSerive.login(username, password);
     rs.then((response) => {
+      // Check if login success
       if (response.data.meta.errno == 0) {
-        // Login Success
-        setLogin();
-        setAccountInfo(0, username);
-
-        commit("loginSuccess", {
-          id: 0,
+        let accountInfo = {
           username: username,
-        });
+          id: 0,
+        };
+        setLogin();
+        setAccountInfo(accountInfo.id, accountInfo.username);
+        commit("loginSuccess", accountInfo);
+
         dispatch("alert/success", "Login successfully", { root: true });
         router.push("/profile");
       } else {
-        // Login fail
         commit("loginFailure");
-        dispatch("alert/error", "Login Fail", { root: true });
+        dispatch("alert/error", response.data.meta.error, { root: true });
       }
     }).catch((err) => {
-      // Login error
-      commit("loginFailure");
-      dispatch("alert/error", "Something went wrong", { root: true });
+      // Check if error have response
+      if (err.response) {
+        commit("loginFailure");
+        dispatch(
+          "alert/error",
+          capitalizeFirstLetter(err.response.data.meta.error),
+          { root: true }
+        );
+      }
     });
   },
   register({ dispatch, commit }, { username, password }) {
     commit("registerRequest", { username });
     var rs = userSerive.register(username, password);
     rs.then((response) => {
-      commit("registerSuccess");
-      dispatch("alert/success", "Register successfully", { root: true });
+      if (response.data.meta.errno == 0) {
+        commit("registerSuccess");
+        dispatch("alert/success", "Register successfully", { root: true });
+      }
     }).catch((err) => {
-      commit("registerFailure");
-      dispatch("alert/error", "Register fail", { root: true });
+      if (err.response) {
+        commit("registerFailure");
+        dispatch(
+          "alert/error",
+          capitalizeFirstLetter(err.response.data.meta.error),
+          { root: true }
+        );
+      }
     });
   },
   logout({ dispatch, commit }) {
@@ -69,11 +84,8 @@ const actions = {
   checkToken({ dispatch, commit }) {
     const rs = userSerive.getProfile();
     rs.then((response) => {
-      console.log(response);
       if (response.data.meta.errno == 0) {
-        commit("updateAccountInfo", {
-          id: response.data.data.id,
-        });
+        commit("updateAccountInfo", response.data.data);
         dispatch("alert/success", "Check session successfully", { root: true });
       } else {
         dispatch("alert/error", "Session is expired", { root: true });
@@ -82,10 +94,12 @@ const actions = {
         router.push("/login");
       }
     }).catch((err) => {
-      dispatch("alert/error", "Something went wrong", { root: true });
-      commit("logout");
-      setLogout();
-      router.push("/login");
+      if (err.response) {
+        dispatch("alert/error", "Something went wrong", { root: true });
+        commit("logout");
+        setLogout();
+        router.push("/login");
+      }
     });
   },
 };
