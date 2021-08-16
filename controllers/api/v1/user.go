@@ -1,12 +1,10 @@
 package v1
 
 import (
-	"log"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	ctrl "github.com/xybor/xychat/controllers"
 	apihelper "github.com/xybor/xychat/helpers/api/v1"
 	"github.com/xybor/xychat/helpers/context"
 	"github.com/xybor/xychat/helpers/tokens"
@@ -30,21 +28,21 @@ func UserRegisterHandler(ctx *gin.Context) {
 
 	// By default, role is set as 'member' if it isn't provided.
 	role, err := context.RetrieveQuery(ctx, "role")
-	if err != nil {
+	if err.Errno() != 0 {
 		role = service.RoleMember
 	}
 
-	userService := service.CreateUserService(id)
+	userService := service.CreateUserService(id, true)
 
-	err = userService.Register(username, password, role)
-	if err != nil {
-		response := apihelper.NewAPIError(ctrl.ErrorFailedProcess, err.Error())
-		ctx.JSON(http.StatusUnprocessableEntity, response)
+	xerr := userService.Register(username, password, role)
+	if xerr.Errno() != 0 {
+		response := apihelper.NewAPIError(xerr)
+		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
 	response := apihelper.NewAPIResponse(nil)
-	ctx.JSON(http.StatusAccepted, response)
+	ctx.JSON(http.StatusCreated, response)
 }
 
 // UserAuthenticateHandler handles an incoming request with three query
@@ -62,33 +60,32 @@ func UserAuthenticateHandler(ctx *gin.Context) {
 	password := context.MustRetrieveQuery(ctx, "password")
 
 	// Authentication doesn't need a subject to call the service
-	userService := service.CreateUserService(nil)
+	userService := service.CreateUserService(nil, true)
 
-	userRepresentation, err := userService.Authenticate(username, password)
-	if err != nil {
-		response := apihelper.NewAPIError(ctrl.ErrorFailedProcess, err.Error())
-		ctx.JSON(http.StatusUnauthorized, response)
+	userRepresentation, xerr := userService.Authenticate(username, password)
+	if xerr.Errno() != 0 {
+		response := apihelper.NewAPIError(xerr)
+		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
 	// Create a token with the expired duration is 24 hours
 	userToken := tokens.CreateUserToken(userRepresentation.ID, 24*time.Hour)
 
-	token, err := userToken.Generate()
-	if err != nil {
-		log.Println(err)
-		response := apihelper.NewAPIError(ctrl.ErrorFailedProcess, "couldn't create token")
-		ctx.JSON(http.StatusUnprocessableEntity, response)
+	token, xerr := userToken.Generate()
+	if xerr.Errno() != 0 {
+		response := apihelper.NewAPIError(xerr)
+		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
 	// Set the token as a cookie.  It is configured as httponly for safety and
 	// affects on all url.
-	dayTime := 24 * 60 * 60
-	context.SetCookie(ctx, "xytok", token, dayTime)
+	oneDay := 24 * 60 * 60
+	context.SetCookie(ctx, "xytok", token, oneDay)
 
-	response := apihelper.NewAPIResponse(nil)
-	ctx.JSON(http.StatusAccepted, response)
+	response := apihelper.NewAPIResponse(userRepresentation)
+	ctx.JSON(http.StatusOK, response)
 }
 
 // UserProfileHandler handles an incoming request with one optional query
@@ -100,12 +97,12 @@ func UserAuthenticateHandler(ctx *gin.Context) {
 func UserProfileHandler(ctx *gin.Context) {
 	id := context.GetUID(ctx)
 
-	userService := service.CreateUserService(id)
+	userService := service.CreateUserService(id, true)
 
-	profile, err := userService.SelfSelect()
-	if err != nil {
-		response := apihelper.NewAPIError(ctrl.ErrorFailedProcess, err.Error())
-		ctx.JSON(http.StatusUnprocessableEntity, response)
+	profile, xerr := userService.SelfSelect()
+	if xerr.Errno() != 0 {
+		response := apihelper.NewAPIError(xerr)
+		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
@@ -122,19 +119,19 @@ func UserProfileHandler(ctx *gin.Context) {
 // Response: A profile + An error message.
 func UserGETHandler(ctx *gin.Context) {
 	id := context.GetUID(ctx)
-	destId, err := context.GetURLParamAsUint(ctx, "id")
-	if err != nil {
-		response := apihelper.NewAPIError(ctrl.ErrorInput, "couldn't parse id")
-		ctx.JSON(http.StatusBadRequest, response)
+	destId, xerr := context.GetURLParamAsUint(ctx, "id")
+	if xerr.Errno() != 0 {
+		response := apihelper.NewAPIError(xerr)
+		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
-	userService := service.CreateUserService(id)
+	userService := service.CreateUserService(id, true)
 
-	profile, err := userService.Select(destId)
-	if err != nil {
-		response := apihelper.NewAPIError(ctrl.ErrorFailedProcess, err.Error())
-		ctx.JSON(http.StatusUnprocessableEntity, response)
+	profile, xerr := userService.Select(destId)
+	if xerr.Errno() != 0 {
+		response := apihelper.NewAPIError(xerr)
+		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
@@ -154,10 +151,10 @@ func UserGETHandler(ctx *gin.Context) {
 func UserPUTHandler(ctx *gin.Context) {
 	context.SetRetrievingMethod(context.POST)
 
-	age, err := context.RetrieveQueryAsPUint(ctx, "age")
-	if err != nil {
-		response := apihelper.NewAPIError(ctrl.ErrorInvalidInput, "invalid age")
-		ctx.JSON(http.StatusBadRequest, response)
+	age, xerr := context.RetrieveQueryAsPUint(ctx, "age")
+	if xerr.Errno() != 0 {
+		response := apihelper.NewAPIError(xerr)
+		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
@@ -166,18 +163,18 @@ func UserPUTHandler(ctx *gin.Context) {
 	gender := context.RetrieveQueryAsPString(ctx, "gender")
 
 	id := context.GetUID(ctx)
-	destId, err := context.GetURLParamAsUint(ctx, "id")
-	if err != nil {
-		response := apihelper.NewAPIError(ctrl.ErrorInput, "couldn't parse id")
-		ctx.JSON(http.StatusBadRequest, response)
+	destId, xerr := context.GetURLParamAsUint(ctx, "id")
+	if xerr.Errno() != 0 {
+		response := apihelper.NewAPIError(xerr)
+		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
-	userService := service.CreateUserService(id)
-	err = userService.UpdateInfo(destId, age, gender)
-	if err != nil {
-		response := apihelper.NewAPIError(ctrl.ErrorFailedProcess, err.Error())
-		ctx.JSON(http.StatusUnprocessableEntity, response)
+	userService := service.CreateUserService(id, true)
+	xerr = userService.UpdateInfo(destId, age, gender)
+	if xerr.Errno() != 0 {
+		response := apihelper.NewAPIError(xerr)
+		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
@@ -197,20 +194,20 @@ func UserChangeRoleHandler(ctx *gin.Context) {
 
 	id := context.GetUID(ctx)
 
-	destId, err := context.GetURLParamAsUint(ctx, "id")
-	if err != nil {
-		response := apihelper.NewAPIError(ctrl.ErrorInput, "couldn't parse id")
-		ctx.JSON(http.StatusBadRequest, response)
+	destId, xerr := context.GetURLParamAsUint(ctx, "id")
+	if xerr.Errno() != 0 {
+		response := apihelper.NewAPIError(xerr)
+		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
 	role := context.MustRetrieveQuery(ctx, "role")
 
-	userService := service.CreateUserService(id)
-	err = userService.UpdateRole(destId, role)
-	if err != nil {
-		response := apihelper.NewAPIError(ctrl.ErrorFailedProcess, err.Error())
-		ctx.JSON(http.StatusUnprocessableEntity, response)
+	userService := service.CreateUserService(id, true)
+	xerr = userService.UpdateRole(destId, role)
+	if xerr.Errno() != 0 {
+		response := apihelper.NewAPIError(xerr)
+		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
@@ -233,21 +230,21 @@ func UserChangePasswordHandler(ctx *gin.Context) {
 
 	id := context.GetUID(ctx)
 
-	destId, err := context.GetURLParamAsUint(ctx, "id")
-	if err != nil {
-		response := apihelper.NewAPIError(ctrl.ErrorInput, "couldn't parse id")
-		ctx.JSON(http.StatusBadRequest, response)
+	destId, xerr := context.GetURLParamAsUint(ctx, "id")
+	if xerr.Errno() != 0 {
+		response := apihelper.NewAPIError(xerr)
+		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
 	oldpassword := context.RetrieveQueryAsPString(ctx, "oldpassword")
 	newpassword := context.MustRetrieveQuery(ctx, "newpassword")
 
-	userService := service.CreateUserService(id)
-	err = userService.UpdatePassword(destId, oldpassword, newpassword)
-	if err != nil {
-		response := apihelper.NewAPIError(ctrl.ErrorFailedProcess, err.Error())
-		ctx.JSON(http.StatusUnprocessableEntity, response)
+	userService := service.CreateUserService(id, true)
+	xerr = userService.UpdatePassword(destId, oldpassword, newpassword)
+	if xerr.Errno() != 0 {
+		response := apihelper.NewAPIError(xerr)
+		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 

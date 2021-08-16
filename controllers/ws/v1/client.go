@@ -37,11 +37,11 @@ type wsClient struct {
 // Before wsClient.readFlow finishes, it call wsClient.CloseHandler function.
 func CreateWSClient(conn *websocket.Conn) *wsClient {
 	wsc := wsClient{
-		conn:            conn,
-		send:            make(chan interface{}),
-		ReadHandler:     func(message []byte) error { return nil },
-		CloseHandler:    func() {},
-		endOfWriteFlow:  make(chan bool),
+		conn:           conn,
+		send:           make(chan interface{}),
+		ReadHandler:    func(message []byte) error { return nil },
+		CloseHandler:   func() {},
+		endOfWriteFlow: make(chan bool),
 		isSending:      true,
 		isSendingMutex: sync.Mutex{},
 	}

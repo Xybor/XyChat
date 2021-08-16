@@ -1,10 +1,7 @@
 package v1
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
-	ctrl "github.com/xybor/xychat/controllers"
 	apihelper "github.com/xybor/xychat/helpers/api/v1"
 	"github.com/xybor/xychat/helpers/context"
 )
@@ -20,11 +17,11 @@ func MustHaveQueryParam(method string, params ...string) gin.HandlerFunc {
 		context.SetRetrievingMethod(method)
 
 		for _, param := range params {
-			_, err := context.RetrieveQuery(ctx, param)
+			_, xerr := context.RetrieveQuery(ctx, param)
 
-			if err != nil {
-				response := apihelper.NewAPIError(ctrl.ErrorLackOfInput, "empty "+param)
-				ctx.JSON(http.StatusBadRequest, response)
+			if xerr.Errno() != 0 {
+				response := apihelper.NewAPIError(xerr)
+				ctx.JSON(xerr.StatusCode(), response)
 				ctx.Abort()
 				return
 			}

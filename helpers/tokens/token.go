@@ -1,17 +1,12 @@
 package tokens
 
 import (
-	"errors"
 	"log"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/xybor/xychat/helpers"
-)
-
-var (
-	ErrorExpiredToken = errors.New("token is expired")
-	ErrorInvalidToken = errors.New("token is invalid")
+	xyerrors "github.com/xybor/xychat/xyerrors/v1"
 )
 
 type userToken struct {
@@ -57,7 +52,7 @@ func (ut userToken) GetUID() uint {
 }
 
 // Generate creates a token with the userToken information.
-func (ut userToken) Generate() (string, error) {
+func (ut userToken) Generate() (string, xyerrors.XyError) {
 	claims := userTokenClaims{
 		ID: ut.id,
 		StandardClaims: &jwt.StandardClaims{
@@ -72,15 +67,21 @@ func (ut userToken) Generate() (string, error) {
 
 	secret, err := getSecret(&jwt.Token{})
 	if err != nil {
-		return "", err
+		log.Println(err)
+		return "", xyerrors.ErrorUnknown
 	}
 
 	signedToken, err := token.SignedString(secret)
-	return signedToken, err
+	if err != nil {
+		log.Println(err)
+		return "", xyerrors.ErrorCannotCreateToken.New("Something is wrong when creating token")
+	}
+
+	return signedToken, xyerrors.NoError
 }
 
 // Validate verifies the provided token and set id to the userToken.
-func (ut *userToken) Validate(signedToken string) error {
+func (ut *userToken) Validate(signedToken string) xyerrors.XyError {
 	claims := userTokenClaims{}
 	_, err := jwt.ParseWithClaims(
 		signedToken,
@@ -90,15 +91,15 @@ func (ut *userToken) Validate(signedToken string) error {
 
 	if err != nil {
 		log.Println(err)
-		return ErrorInvalidToken
+		return xyerrors.ErrorUnknown.New("Invalid token")
 	}
 
 	expiration := claims.StandardClaims.ExpiresAt
 	if expiration-time.Now().Unix() < 0 {
-		return ErrorExpiredToken
+		return xyerrors.ErrorInvalidToken.New("Expired token")
 	}
 
 	ut.id = claims.ID
 
-	return nil
+	return xyerrors.NoError
 }

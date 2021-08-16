@@ -48,47 +48,59 @@ func TestSetupDatabase(t *testing.T) {
 	models.GetDB().Create(&chatUser3)
 	models.GetDB().Create(&chatUser4)
 
-	us1 := services.CreateUserService(&chatUser1.ID)
-	us2 := services.CreateUserService(&chatUser2.ID)
-	us3 := services.CreateUserService(&chatUser3.ID)
-	us4 := services.CreateUserService(&chatUser4.ID)
+	us1 := services.CreateUserService(&chatUser1.ID, true)
+	us2 := services.CreateUserService(&chatUser2.ID, true)
+	us3 := services.CreateUserService(&chatUser3.ID, true)
+	us4 := services.CreateUserService(&chatUser4.ID, true)
 
 	rs := services.CreateRoomService(nil)
-	rs.Create(&us1, &us2)
-	rs.Create(&us3, &us4)
-	rs.Create(&us1, &us3)
+
+	xerr := rs.Create(&us1, &us2)
+	if xerr.Errno() != 0 {
+		t.Log(xerr)
+	}
+
+	xerr = rs.Create(&us3, &us4)
+	if xerr.Errno() != 0 {
+		t.Log(xerr)
+	}
+
+	xerr = rs.Create(&us1, &us3)
+	if xerr.Errno() != 0 {
+		t.Log(xerr)
+	}
 }
 
 func TestChatJoinBroadcast(t *testing.T) {
-	us1 := services.CreateUserService(&chatUser1.ID)
-	us2 := services.CreateUserService(&chatUser2.ID)
-	us3 := services.CreateUserService(&chatUser3.ID)
-	us4 := services.CreateUserService(&chatUser4.ID)
+	us1 := services.CreateUserService(&chatUser1.ID, true)
+	us2 := services.CreateUserService(&chatUser2.ID, true)
+	us3 := services.CreateUserService(&chatUser3.ID, true)
+	us4 := services.CreateUserService(&chatUser4.ID, true)
 
 	rs := services.CreateRoomService(nil)
 	rs.Create(&us1, &us2)
 	rs.Create(&us3, &us4)
 
 	chatService1, err := services.CreateChatService(us1)
-	if err != nil {
+	if err.Errno() != 0 {
 		t.Log(err)
 		t.Fail()
 	}
 
 	chatService2, err := services.CreateChatService(us2)
-	if err != nil {
+	if err.Errno() != 0 {
 		t.Log(err)
 		t.Fail()
 	}
 
 	chatService3, err := services.CreateChatService(us3)
-	if err != nil {
+	if err.Errno() != 0 {
 		t.Log(err)
 		t.Fail()
 	}
 
 	chatService4, err := services.CreateChatService(us4)
-	if err != nil {
+	if err.Errno() != 0 {
 		t.Log(err)
 		t.Fail()
 	}
@@ -209,32 +221,34 @@ func TestChatJoinBroadcast(t *testing.T) {
 }
 
 func TestChat(t *testing.T) {
-	us1 := services.CreateUserService(&chatUser1.ID)
-	us2 := services.CreateUserService(&chatUser2.ID)
-	us3 := services.CreateUserService(&chatUser3.ID)
-	us4 := services.CreateUserService(&chatUser4.ID)
+	TestSetupDatabase(t)
 
-	chatService1, err := services.CreateChatService(us1)
-	if err != nil {
-		t.Log(err)
+	us1 := services.CreateUserService(&chatUser1.ID, true)
+	us2 := services.CreateUserService(&chatUser2.ID, true)
+	us3 := services.CreateUserService(&chatUser3.ID, true)
+	us4 := services.CreateUserService(&chatUser4.ID, true)
+
+	chatService1, xerr := services.CreateChatService(us1)
+	if xerr.Errno() != 0 {
+		t.Log(xerr)
 		t.Fail()
 	}
 
-	chatService2, err := services.CreateChatService(us2)
-	if err != nil {
-		t.Log(err)
+	chatService2, xerr := services.CreateChatService(us2)
+	if xerr.Errno() != 0 {
+		t.Log(xerr)
 		t.Fail()
 	}
 
-	chatService3, err := services.CreateChatService(us3)
-	if err != nil {
-		t.Log(err)
+	chatService3, xerr := services.CreateChatService(us3)
+	if xerr.Errno() != 0 {
+		t.Log(xerr)
 		t.Fail()
 	}
 
-	chatService4, err := services.CreateChatService(us4)
-	if err != nil {
-		t.Log(err)
+	chatService4, xerr := services.CreateChatService(us4)
+	if xerr.Errno() != 0 {
+		t.Log(xerr)
 		t.Fail()
 	}
 

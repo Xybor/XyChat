@@ -9,11 +9,6 @@ import (
 	"github.com/xybor/xychat/helpers"
 )
 
-// ApplyAPIHeader adds some headers for API response.
-func ApplyAPIHeader(c *gin.Context) {
-	c.Writer.Header().Add("Content-Type", "application/json")
-}
-
 // ApplyCORSHeader adds the Access-Control-Allow-Origin to the header of
 // response.
 func ApplyCORSHeader() gin.HandlerFunc {
@@ -32,7 +27,6 @@ func ApplyCORSHeader() gin.HandlerFunc {
 	} else {
 		domainList := strings.Split(domains, ";")
 
-		// Strip spaces
 		for i, d := range domainList {
 			domainList[i] = strings.Trim(d, " ")
 		}

@@ -8,6 +8,7 @@ import (
 	"github.com/xybor/xychat/models"
 	r "github.com/xybor/xychat/representations/v1"
 	services "github.com/xybor/xychat/services/v1"
+	xyerrors "github.com/xybor/xychat/xyerrors/v1"
 )
 
 var matchUser1 models.User
@@ -16,6 +17,7 @@ var matchUser2 models.User
 func TestInitializeMatchQueue(t *testing.T) {
 	services.InitializeMatchQueue(10 * time.Second)
 	TestInitializeDB(t)
+	var err error
 
 	matchUser1, err = CreateUser("USN1", "PWD1", "member")
 	if err != nil {
@@ -29,19 +31,19 @@ func TestInitializeMatchQueue(t *testing.T) {
 }
 
 func TestNoneMatchService(t *testing.T) {
-	userService := services.CreateUserService(nil)
-	_, err := services.CreateMatchService(userService)
-	if err != services.ErrorPermission {
+	userService := services.CreateUserService(nil, true)
+	_, xerr := services.CreateMatchService(userService)
+	if xerr.Errno() != xyerrors.ErrorPermission.Errno() {
 		t.Log("Create none match service")
 		t.Fail()
 	}
 }
 
 func TestMatchServiceJoinQueue(t *testing.T) {
-	userService := services.CreateUserService(&matchUser1.ID)
-	matchService, err := services.CreateMatchService(userService)
-	if err != nil {
-		t.Log("Create match service: ", err)
+	userService := services.CreateUserService(&matchUser1.ID, true)
+	matchService, xerr := services.CreateMatchService(userService)
+	if xerr.Errno() != 0 {
+		t.Log("Create match service: ", xerr)
 		log.Fatal()
 	}
 
@@ -73,23 +75,23 @@ func TestMatchServiceJoinQueue(t *testing.T) {
 }
 
 func TestDuplicatedMatchService(t *testing.T) {
-	userService1 := services.CreateUserService(&matchUser1.ID)
-	matchService1, err := services.CreateMatchService(userService1)
-	if err != nil {
-		t.Log("Create match service: ", err)
+	userService1 := services.CreateUserService(&matchUser1.ID, true)
+	matchService1, xerr := services.CreateMatchService(userService1)
+	if xerr.Errno() != 0 {
+		t.Log("Create match service: ", xerr)
 		t.Fail()
 	} else {
 		defer matchService1.Close()
 	}
 
-	userService2 := services.CreateUserService(&matchUser1.ID)
-	matchService2, err := services.CreateMatchService(userService2)
-	if err != services.ErrorDuplicatedConnection {
-		t.Log("Create match service: ", err)
+	userService2 := services.CreateUserService(&matchUser1.ID, true)
+	matchService2, xerr := services.CreateMatchService(userService2)
+	if xerr.Errno() != xyerrors.ErrorDuplicatedConnection.Errno() {
+		t.Log("Create match service: ", xerr)
 		t.Fail()
 	}
 
-	if err == nil {
+	if xerr.Errno() == 0 {
 		defer matchService2.Close()
 	}
 }
@@ -100,18 +102,18 @@ func TestTwoMatchServiceJoin(t *testing.T) {
 		t.Fail()
 	}
 
-	userService1 := services.CreateUserService(&matchUser1.ID)
-	matchService1, err := services.CreateMatchService(userService1)
-	if err != nil {
-		t.Log("Create match service: ", err)
+	userService1 := services.CreateUserService(&matchUser1.ID, true)
+	matchService1, xerr := services.CreateMatchService(userService1)
+	if xerr.Errno() != 0 {
+		t.Log("Create match service: ", xerr)
 		t.FailNow()
 	}
 	defer matchService1.Close()
 
-	userService2 := services.CreateUserService(&matchUser2.ID)
-	matchService2, err := services.CreateMatchService(userService2)
-	if err != nil {
-		t.Log("Create match service: ", err)
+	userService2 := services.CreateUserService(&matchUser2.ID, true)
+	matchService2, xerr := services.CreateMatchService(userService2)
+	if xerr.Errno() != 0 {
+		t.Log("Create match service: ", xerr)
 		t.FailNow()
 	}
 	defer matchService2.Close()

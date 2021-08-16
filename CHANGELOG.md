@@ -5,10 +5,16 @@
 - Add chat feature with websocket at `/ws/v1/chat`.
 - Allow CORS by using environment variable.
 - Split README.md into many files.
+
 ## Alpha.0.5.2
 - Use TLS environment variable to dynamically enable HTTPS method.
 - Use environment variable to set admin user.
 - Use XYCHAT environment variable to determine that the application is running for what (test, debug or release).
+
+## Alpha.0.5.3
+- Return user information in auth API.
+- Redesign the error management.
+- Remove ApplyAPIHeader.
 
 
 # Alpha.0.4

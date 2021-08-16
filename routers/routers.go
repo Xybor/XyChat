@@ -26,7 +26,6 @@ func Route() *gin.Engine {
 	rapi := router.Group("api")
 	rapi.Use(
 		middlewares.VerifyUserToken(true),
-		middlewares.ApplyAPIHeader,
 		middlewares.ApplyCORSHeader(),
 	)
 	{

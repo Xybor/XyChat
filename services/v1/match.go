@@ -6,6 +6,7 @@ import (
 	"time"
 
 	representation "github.com/xybor/xychat/representations/v1"
+	xyerrors "github.com/xybor/xychat/xyerrors/v1"
 )
 
 type matchQueue struct {
@@ -124,8 +125,8 @@ func (q *matchQueue) match() {
 			roomService := CreateRoomService(nil)
 
 			var ID uint = 0
-			if err := roomService.Create(&client1.us, &client2.us); err != nil {
-				log.Println(err)
+			if xerr := roomService.Create(&client1.us, &client2.us); xerr.Errno() != 0 {
+				log.Println(xerr)
 			} else {
 				ID = roomService.room.ID
 			}
@@ -177,16 +178,16 @@ var matchServiceListMutex = sync.Mutex{}
 // @goroutine: ms.waitForAMatch
 func CreateMatchService(
 	us userService,
-) (*matchService, error) {
+) (*matchService, xyerrors.XyError) {
 	if us.user == nil {
-		return nil, ErrorPermission
+		return nil, xyerrors.ErrorPermission.New("User must login before")
 	}
 
 	matchServiceListMutex.Lock()
 	defer matchServiceListMutex.Unlock()
 
 	if _, ok := matchServiceList[us.user.ID]; ok {
-		return nil, ErrorDuplicatedConnection
+		return nil, xyerrors.ErrorDuplicatedConnection.New("Each user has only a slot in matching queue")
 	}
 
 	ms := &matchService{
@@ -200,7 +201,7 @@ func CreateMatchService(
 
 	go ms.waitForAMatch()
 
-	return ms, nil
+	return ms, xyerrors.NoError
 }
 
 // Register push this clientService to MatchQueue

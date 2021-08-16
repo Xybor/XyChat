@@ -6,6 +6,7 @@ import (
 
 	"github.com/xybor/xychat/models"
 	r "github.com/xybor/xychat/representations/v1"
+	xyerrors "github.com/xybor/xychat/xyerrors/v1"
 )
 
 // The management list of chatService.  Each user (id) can have many
@@ -42,14 +43,14 @@ func addToChatServiceList(cs *chatService) {
 // @lock: chatServiceList
 //
 // @error: ErrorNotInManagementList
-func removeFromChatServiceList(cs *chatService) error {
+func removeFromChatServiceList(cs *chatService) xyerrors.XyError {
 	chatServiceListMutex.Lock()
 	defer chatServiceListMutex.Unlock()
 
 	id := cs.us.user.ID
 
 	if _, ok := chatServiceList[id]; !ok {
-		return ErrorNotInManagementList
+		return xyerrors.ErrorNotInManagementList.New("Cannot remove an unmanaged chat service")
 	}
 
 	for i, cService := range chatServiceList[id] {
@@ -66,22 +67,22 @@ func removeFromChatServiceList(cs *chatService) error {
 		}
 	}
 
-	return nil
+	return xyerrors.NoError
 }
 
 // CreateChatService creates a chatService from a given userService.
 //
 // @error: ErrorPermission
-func CreateChatService(us userService) (*chatService, error) {
+func CreateChatService(us userService) (*chatService, xyerrors.XyError) {
 	us.load()
 
 	if us.user == nil {
-		return nil, ErrorPermission
+		return nil, xyerrors.ErrorPermission.New("User must login before")
 	}
 
-	err := us.LoadRooms()
-	if err != nil {
-		return nil, err
+	xerr := us.LoadRooms()
+	if xerr.Errno() != 0 {
+		return nil, xerr
 	}
 
 	cService := &chatService{
@@ -91,7 +92,7 @@ func CreateChatService(us userService) (*chatService, error) {
 		roomsMutex: sync.Mutex{},
 	}
 
-	return cService, nil
+	return cService, xyerrors.NoError
 }
 
 // The close method closes the channel receiver, clears all rooms, and removes
@@ -100,7 +101,7 @@ func CreateChatService(us userService) (*chatService, error) {
 // @lock: chatServiceList
 //
 // @error: ErrorNotInManagementList
-func (cs *chatService) close() error {
+func (cs *chatService) close() xyerrors.XyError {
 	close(cs.receiver)
 	cs.rooms = nil
 	return removeFromChatServiceList(cs)
@@ -123,19 +124,19 @@ func (cs *chatService) close() error {
 //
 // @lock: cs.rooms, chatServiceList
 //
-// @error: ErrorCannotAccessToRoom
-func (cs *chatService) connect(bs *broadcastService) error {
+// @error: ErrorPermission
+func (cs *chatService) connect(bs *broadcastService) xyerrors.XyError {
 	cs.roomsMutex.Lock()
 	defer cs.roomsMutex.Unlock()
 
 	for _, room := range cs.us.user.Rooms {
 		if bs.rs.room.ID == room.ID {
 			cs.rooms = append(cs.rooms, bs)
-			return nil
+			return xyerrors.NoError
 		}
 	}
 
-	return ErrorCannotAccessToRoom
+	return xyerrors.ErrorPermission.New("You aren't entitled to connect to room %d", bs.rs.room.ID)
 }
 
 // disconnect remove a broadcastService from the chatService.
@@ -145,7 +146,7 @@ func (cs *chatService) connect(bs *broadcastService) error {
 // @lock: cs.rooms, chatServiceList
 //
 // @error: ErrorNotYetJoinInRoom
-func (cs *chatService) disconnect(bs *broadcastService, lockRooms bool) error {
+func (cs *chatService) disconnect(bs *broadcastService, lockRooms bool) xyerrors.XyError {
 	if lockRooms {
 		cs.roomsMutex.Lock()
 		defer cs.roomsMutex.Unlock()
@@ -159,7 +160,8 @@ func (cs *chatService) disconnect(bs *broadcastService, lockRooms bool) error {
 	}
 
 	if pos == -1 {
-		return ErrorNotYetJoinInRoom
+		return xyerrors.ErrorNotYetJoinInRoom.New(
+			"You hadn't joined in room %d, cannot disconnect", bs.rs.room.ID)
 	}
 
 	// Remove the bs from an unordered array
@@ -170,7 +172,7 @@ func (cs *chatService) disconnect(bs *broadcastService, lockRooms bool) error {
 		cs.close()
 	}
 
-	return nil
+	return xyerrors.NoError
 }
 
 // Online finds all broadcastServices asscociated with this chatService, then
@@ -181,25 +183,25 @@ func (cs *chatService) Online() {
 	for _, room := range cs.us.user.Rooms {
 		rs := CreateRoomService(&room.ID)
 
-		bs, err := createBroadcastService(rs)
+		bs, xerr := createBroadcastService(rs)
 
-		if err != nil {
-			log.Panicf("%s, rid=%d, uid=%d\n", err, bs.rs.room.ID, cs.us.user.ID)
+		if xerr.Errno() != 0 {
+			log.Panicf("%s, rid=%d, uid=%d\n", xerr, bs.rs.room.ID, cs.us.user.ID)
 		}
 
-		err = bs.attach(cs)
-		if err != nil {
-			log.Printf("%s, rid=%d, uid=%d\n", err, bs.rs.room.ID, cs.us.user.ID)
+		xerr = bs.attach(cs)
+		if xerr.Errno() != 0 {
+			log.Printf("%s, rid=%d, uid=%d\n", xerr, bs.rs.room.ID, cs.us.user.ID)
 			continue
 		}
 
-		err = cs.connect(bs)
-		if err != nil {
-			log.Printf("%s, rid=%d, uid=%d\n", err, bs.rs.room.ID, cs.us.user.ID)
+		xerr = cs.connect(bs)
+		if xerr.Errno() != 0 {
+			log.Printf("%s, rid=%d, uid=%d\n", xerr, bs.rs.room.ID, cs.us.user.ID)
 
-			err = bs.detach(cs)
-			if err != nil {
-				log.Panicf("%s, rid=%d, uid=%d\n", err, bs.rs.room.ID, cs.us.user.ID)
+			xerr = bs.detach(cs)
+			if xerr.Errno() != 0 {
+				log.Panicf("%s, rid=%d, uid=%d\n", xerr, bs.rs.room.ID, cs.us.user.ID)
 			}
 
 			continue
@@ -221,13 +223,13 @@ func (cs *chatService) Offline() {
 	var err error
 
 	for _, bs := range cs.rooms {
-		err = cs.disconnect(bs, false)
-		if err != nil {
+		xerr := cs.disconnect(bs, false)
+		if xerr.Errno() != 0 {
 			log.Panicf("%s, rid=%d, uid=%d", err, bs.rs.room.ID, cs.us.user.ID)
 		}
 
-		err = bs.detach(cs)
-		if err != nil {
+		xerr = bs.detach(cs)
+		if xerr.Errno() != 0 {
 			log.Printf("%s, rid=%d, uid=%d", err, bs.rs.room.ID, cs.us.user.ID)
 			continue
 		}
@@ -256,21 +258,21 @@ func (cs *chatService) which(roomid uint) *broadcastService {
 // @lock: cs.rooms
 //
 // @error: ErrorNotYetJoinInRoom
-func (cs *chatService) SendTo(roomid uint, msg string) error {
+func (cs *chatService) SendTo(roomid uint, msg string) xyerrors.XyError {
 	if bs := cs.which(roomid); bs != nil {
 		chatMsg := &models.ChatMessage{RoomID: roomid, UserID: cs.us.user.ID, Message: msg}
 
 		err := models.GetDB().Create(chatMsg).Error
 		if err != nil {
-			return ErrorUnknown
+			return xyerrors.ErrorUnknown
 		}
 
 		bs.hub <- chatMsg
 
-		return nil
+		return xyerrors.NoError
 	}
 
-	return ErrorNotYetJoinInRoom
+	return xyerrors.ErrorNotYetJoinInRoom.New("You hadn't joined in room %d", roomid)
 }
 
 // runAutoReceive runs the infinite loop to get messages from broadcastService

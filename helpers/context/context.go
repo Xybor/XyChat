@@ -1,12 +1,12 @@
 package context
 
 import (
-	"errors"
 	"log"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/xybor/xychat/helpers"
+	xyerrors "github.com/xybor/xychat/xyerrors/v1"
 )
 
 const (
@@ -31,27 +31,27 @@ func SetRetrievingMethod(m string) {
 	method = m
 }
 
-func retrieveGET(ctx *gin.Context, key string) (string, error) {
+func retrieveGET(ctx *gin.Context, key string) (string, xyerrors.XyError) {
 	v, ok := ctx.GetQuery(key)
 	if !ok {
-		return "", errors.New("invalid get key")
+		return "", xyerrors.ErrorNotFoundInput.New("invalid GET key %s", key)
 	}
 
-	return v, nil
+	return v, xyerrors.NoError
 }
 
-func retrievePOST(ctx *gin.Context, key string) (string, error) {
+func retrievePOST(ctx *gin.Context, key string) (string, xyerrors.XyError) {
 	v, ok := ctx.GetPostForm(key)
 	if !ok {
-		return "", errors.New("invalid post key")
+		return "", xyerrors.ErrorNotFoundInput.New("invalid POST key %s", key)
 	}
 
-	return v, nil
+	return v, xyerrors.NoError
 }
 
 // RetrieveQuery bases on the method set by SetRetrievingMethod to get the
 // query parameters in the suitable place.
-func RetrieveQuery(ctx *gin.Context, key string) (string, error) {
+func RetrieveQuery(ctx *gin.Context, key string) (string, xyerrors.XyError) {
 	switch method {
 	case GET:
 		return retrieveGET(ctx, key)
@@ -65,26 +65,26 @@ func RetrieveQuery(ctx *gin.Context, key string) (string, error) {
 // RetrieveQueryAsPUint retrieves the query parameter and converts it to *uint
 // (from string).  If key is invalid, the return value is nil and there is no
 // error.
-func RetrieveQueryAsPUint(ctx *gin.Context, key string) (*uint, error) {
-	svalue, err := RetrieveQuery(ctx, key)
-	if err != nil {
-		return nil, nil
+func RetrieveQueryAsPUint(ctx *gin.Context, key string) (*uint, xyerrors.XyError) {
+	svalue, xerr := RetrieveQuery(ctx, key)
+	if xerr.Errno() != 0 {
+		return nil, xerr
 	}
 
 	value64, err := strconv.ParseUint(svalue, 10, 64)
 	if err != nil {
-		return nil, err
+		return nil, xyerrors.ErrorSyntaxInput.New("%s expected an uint", key)
 	}
 
 	value := uint(value64)
-	return &value, nil
+	return &value, xyerrors.NoError
 }
 
 // RetrieveQueryAsPString retrieves the query parameter and converts it to
 // *string. If key is invalid, the return value is nil.
 func RetrieveQueryAsPString(ctx *gin.Context, key string) *string {
-	value, err := RetrieveQuery(ctx, key)
-	if err != nil {
+	value, xerr := RetrieveQuery(ctx, key)
+	if xerr.Errno() != 0 {
 		return nil
 	}
 
@@ -94,10 +94,10 @@ func RetrieveQueryAsPString(ctx *gin.Context, key string) *string {
 // MustRetrieveQuery is equipvalent to RetrieveQuery and log.Panic if a error
 // occurs.
 func MustRetrieveQuery(ctx *gin.Context, key string) string {
-	value, err := RetrieveQuery(ctx, key)
+	value, xerr := RetrieveQuery(ctx, key)
 
-	if err != nil {
-		log.Panicln(err)
+	if xerr.Errno() != 0 {
+		log.Panicln(xerr)
 	}
 
 	return value
@@ -105,18 +105,18 @@ func MustRetrieveQuery(ctx *gin.Context, key string) string {
 
 // GetURLParamAsUint gets the param in URL by using ctx.Params.Get and converts
 // it to uint (from string).
-func GetURLParamAsUint(ctx *gin.Context, key string) (uint, error) {
+func GetURLParamAsUint(ctx *gin.Context, key string) (uint, xyerrors.XyError) {
 	value, ok := ctx.Params.Get(key)
 	if !ok {
-		return 0, errors.New("invalid key")
+		return 0, xyerrors.ErrorNotFoundInput.New("Invalid input %s", key)
 	}
 
 	i64, err := strconv.ParseUint(value, 10, 64)
 	if err != nil {
-		return 0, errors.New("param can't be parsed as uint")
+		return 0, xyerrors.ErrorSyntaxInput.New("%s expected an uint", key)
 	}
 
-	return uint(i64), nil
+	return uint(i64), xyerrors.NoError
 }
 
 // GetUID gets UID from the context by ctx.Get() and convert it to *uint.  If

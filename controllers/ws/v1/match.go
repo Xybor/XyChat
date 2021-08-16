@@ -3,11 +3,11 @@ package v1
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	ctrl "github.com/xybor/xychat/controllers"
 	"github.com/xybor/xychat/helpers/context"
 	wshelper "github.com/xybor/xychat/helpers/ws/v1"
-	service "github.com/xybor/xychat/services/v1"
 	representations "github.com/xybor/xychat/representations/v1"
+	service "github.com/xybor/xychat/services/v1"
+	xyerrors "github.com/xybor/xychat/xyerrors/v1"
 )
 
 // WSMatchHandler handles an incoming request which has already upgraded to
@@ -20,30 +20,29 @@ import (
 //
 // Note that a user has only a connection to the matchQueue.
 func WSMatchHandler(ctx *gin.Context) {
-	connection, _ := ctx.Get("WebSocket")
+	connection := ctx.MustGet("WebSocket")
 	conn := connection.(*websocket.Conn)
 	client := CreateWSClient(conn)
 
 	defer client.Close()
 
 	id := context.GetUID(ctx)
-	userService := service.CreateUserService(id)
-	matchService, err := service.CreateMatchService(userService)
 
-	// If there was already a matchService of this user, the return value is nil.
-	if err != nil {
-		response := wshelper.NewWSError(ctrl.ErrorFailedProcess, err.Error())
+	userService := service.CreateUserService(id, true)
+	matchService, xerr := service.CreateMatchService(userService)
+	if xerr.Errno() != 0 {
+		response := wshelper.NewWSError(xerr)
 		client.WriteJSON(response)
 		return
 	}
 
-	var isAlive chan bool = make(chan bool)
+	var isAlive = make(chan bool)
 
 	matchService.MatchHandler = func(room representations.RoomRepresentation) {
 		// 0 is an invalid room's identity, therefore it sends failure response to
 		// client.
 		if room.ID == 0 {
-			response := wshelper.NewWSError(ctrl.ErrorFailedProcess, "Can't match anyone")
+			response := wshelper.NewWSError(xyerrors.ErrorUnknown.New("Can't match with anyone"))
 			client.WriteJSON(response)
 			return
 		}
@@ -71,5 +70,5 @@ func WSMatchHandler(ctx *gin.Context) {
 	// --> matchService.unregister --> call matchService.MatchHandler -->
 	// isAlive signals.
 	// Case 2: The matchQueue finds a match --> call matchService.MatchHandler.
-	<- isAlive
+	<-isAlive
 }

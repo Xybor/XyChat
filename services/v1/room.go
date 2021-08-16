@@ -2,29 +2,30 @@ package v1
 
 import (
 	"github.com/xybor/xychat/models"
+	xyerrors "github.com/xybor/xychat/xyerrors/v1"
 )
 
 type roomService struct {
-	room        *models.Room
-	isValidated bool
+	room *models.Room
 }
 
 // CreateRoomService creates a roomService struct with given roomid.
 func CreateRoomService(id *uint) roomService {
 	if id == nil {
-		return roomService{room: nil, isValidated: false}
+		return roomService{room: nil}
 	}
 
-	return roomService{room: &models.Room{BaseModel: models.BaseModel{ID: *id}}, isValidated: false}
+	return roomService{room: &models.Room{BaseModel: models.BaseModel{ID: *id}}}
 }
 
 // Create creates a room with some users.  It need at least two users to create
 // a room.  The room information is saved in the called object.
 //
 // @error: ErrorNotEnoughUserToCreateRoom, ErrorUnknown
-func (rs *roomService) Create(us ...*userService) error {
+func (rs *roomService) Create(us ...*userService) xyerrors.XyError {
 	if len(us) < 2 {
-		return ErrorNotEnoughUserToCreateRoom
+		return xyerrors.ErrorNotEnoughUserToCreateRoom.New(
+			"It needs at least two users to create a room")
 	}
 
 	db := models.GetDB().Begin()
@@ -34,18 +35,19 @@ func (rs *roomService) Create(us ...*userService) error {
 
 	if err != nil {
 		db.Rollback()
-		return err
+		return xyerrors.ErrorUnknown
 	}
 
 	users := make([]*models.User, len(us))
 	for i, u := range us {
-		u.load()
+		u.validate()
 
 		if u.user == nil {
 			db.Rollback()
-			return ErrorPermission
+			return xyerrors.ErrorUnknown.New("There is an invalid user")
 		}
 
+		u.load()
 		users[i] = u.user
 	}
 
@@ -53,35 +55,35 @@ func (rs *roomService) Create(us ...*userService) error {
 
 	if err != nil {
 		db.Rollback()
-		return ErrorUnknown
+		return xyerrors.ErrorUnknown
 	}
 
 	db.Commit()
 
-	return nil
+	return xyerrors.NoError
 }
 
 // Admit adds a user to the room
 //
 // @error: ErrorPermission, ErrorUnknown
-func (rs *roomService) Admit(us *userService) error {
+func (rs *roomService) Admit(us *userService) xyerrors.XyError {
 	if rs.room == nil {
-		return ErrorPermission
+		return xyerrors.ErrorInvalidService.New("Invalid room")
 	}
 
-	us.load()
+	us.validate()
 
 	if us.user == nil {
-		return ErrorPermission
+		return xyerrors.ErrorInvalidService.New("Invalid user")
 	}
 
 	err := models.GetDB().Model(rs.room).Association("Users").Append(us.user)
 
 	if err != nil {
-		return ErrorUnknown
+		return xyerrors.ErrorUnknown
 	}
 
-	return nil
+	return xyerrors.NoError
 }
 
 // The contain method checks if the user with uid is in the room or not.
@@ -99,14 +101,18 @@ func (rs *roomService) contain(uid uint) bool {
 // rs.room.Users
 //
 // @error: ErrorPermission
-func (rs *roomService) LoadUsers() error {
+func (rs *roomService) LoadUsers() xyerrors.XyError {
 	if rs.room == nil {
-		return ErrorPermission
+		return xyerrors.ErrorInvalidService.New("Invalid room")
 	}
 
 	err := models.GetDB().Model(rs.room).
 		Association("Users").
 		Find(&rs.room.Users)
 
-	return err
+	if err != nil {
+		return xyerrors.ErrorUnknown
+	}
+
+	return xyerrors.NoError
 }
