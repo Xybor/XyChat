@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/xybor/xychat/models"
-	r "github.com/xybor/xychat/representations/v1"
+	resources "github.com/xybor/xychat/resources/v1"
 	services "github.com/xybor/xychat/services/v1"
-	xyerrors "github.com/xybor/xychat/xyerrors/v1"
+	"github.com/xybor/xychat/xyerrors"
 )
 
 var matchUser1 models.User
@@ -121,9 +121,9 @@ func TestTwoMatchServiceJoin(t *testing.T) {
 	matchService1.Register()
 	matchService2.Register()
 
-	var r1, r2 r.RoomRepresentation
-	matchService1.MatchHandler = func(rr r.RoomRepresentation) { r1 = rr }
-	matchService2.MatchHandler = func(rr r.RoomRepresentation) { r2 = rr }
+	var r1, r2 resources.RoomResponse
+	matchService1.MatchHandler = func(rr resources.RoomResponse) { r1 = rr }
+	matchService2.MatchHandler = func(rr resources.RoomResponse) { r2 = rr }
 
 	time.Sleep(11 * time.Second)
 

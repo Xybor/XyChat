@@ -9,12 +9,18 @@
 ## Alpha.0.5.2
 - Use TLS environment variable to dynamically enable HTTPS method.
 - Use environment variable to set admin user.
-- Use XYCHAT environment variable to determine that the application is running for what (test, debug or release).
+- Use XYCHAT environment variable to determine that the application is running
+for what (test, debug or release).
 
 ## Alpha.0.5.3
 - Return user information in auth API.
-- Redesign the error management.
+- Re-design the error management.
 - Remove ApplyAPIHeader.
+
+## Alpha.0.5.4
+- Re-design middlewares, helpers/(api|ws).
+- Change the folder representations to resources.
+- Update FEATURES.md with new version convention.
 
 
 # Alpha.0.4

@@ -1,6 +1,6 @@
 package v1
 
-type UserRepresentation struct {
+type UserResponse struct {
 	ID       uint    `json:"id"`
 	Username string  `json:"username"`
 	Role     string  `json:"role"`

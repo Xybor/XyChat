@@ -2,7 +2,7 @@ package v1
 
 import (
 	"github.com/xybor/xychat/models"
-	xyerrors "github.com/xybor/xychat/xyerrors/v1"
+	"github.com/xybor/xychat/xyerrors"
 )
 
 type roomService struct {

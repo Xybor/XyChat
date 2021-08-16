@@ -1,5 +1,5 @@
 package v1
 
-type RoomRepresentation struct {
+type RoomResponse struct {
 	ID uint `json:"id"`
 }

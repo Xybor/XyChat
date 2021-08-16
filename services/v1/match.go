@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	representation "github.com/xybor/xychat/representations/v1"
-	xyerrors "github.com/xybor/xychat/xyerrors/v1"
+	resources "github.com/xybor/xychat/resources/v1"
+	"github.com/xybor/xychat/xyerrors"
 )
 
 type matchQueue struct {
@@ -156,7 +156,7 @@ type matchService struct {
 	roomid chan uint
 
 	// MatchHandler handles the room returned from the matchQueue
-	MatchHandler func(representation.RoomRepresentation)
+	MatchHandler func(resources.RoomResponse)
 }
 
 // A list of current existed matchServiceList with uid as the identity.
@@ -194,7 +194,7 @@ func CreateMatchService(
 		us:           us,
 		queue:        GetMatchQueue(),
 		roomid:       make(chan uint),
-		MatchHandler: func(rr representation.RoomRepresentation) {},
+		MatchHandler: func(rr resources.RoomResponse) {},
 	}
 
 	matchServiceList[us.user.ID] = true
@@ -228,6 +228,6 @@ func (ms *matchService) Close() {
 // waitForAMatch waits the joinRoom signals from MatchQueue and handles the
 // room with ms.MatchHandler
 func (ms *matchService) waitForAMatch() {
-	room := representation.RoomRepresentation{ID: <-ms.roomid}
+	room := resources.RoomResponse{ID: <-ms.roomid}
 	ms.MatchHandler(room)
 }

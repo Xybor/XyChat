@@ -1,8 +1,8 @@
-package v1
+package middlewares
 
 import (
 	"github.com/gin-gonic/gin"
-	apihelper "github.com/xybor/xychat/helpers/api/v1"
+	apihelper "github.com/xybor/xychat/helpers/api"
 	"github.com/xybor/xychat/helpers/context"
 )
 

@@ -3,11 +3,9 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 	api1 "github.com/xybor/xychat/controllers/api/v1"
-	ui1 "github.com/xybor/xychat/controllers/ui/v1"
 	ws1 "github.com/xybor/xychat/controllers/ws/v1"
 	"github.com/xybor/xychat/helpers/context"
 	"github.com/xybor/xychat/middlewares"
-	mdwv1 "github.com/xybor/xychat/middlewares/v1"
 )
 
 // Route combines middlewares and controllers to handle given url paths in the
@@ -21,7 +19,7 @@ func Route() *gin.Engine {
 	router.Static("/js", "vue/dist/js")
 	router.Static("/css", "vue/dist/css")
 
-	router.NoRoute(ui1.StaticUIHandler)
+	router.NoRoute(func(ctx *gin.Context) { ctx.HTML(200, "index.html", gin.H{}) })
 
 	rapi := router.Group("api")
 	rapi.Use(
@@ -32,11 +30,11 @@ func Route() *gin.Engine {
 		rapi1 := rapi.Group("v1")
 		{
 			rapi1.POST("auth",
-				mdwv1.MustHaveQueryParam(context.POST, "username", "password"),
+				middlewares.MustHaveQueryParam(context.POST, "username", "password"),
 				api1.UserAuthenticateHandler,
 			)
 			rapi1.POST("register",
-				mdwv1.MustHaveQueryParam(context.POST, "username", "password"),
+				middlewares.MustHaveQueryParam(context.POST, "username", "password"),
 				api1.UserRegisterHandler,
 			)
 			rapi1.GET("profile", api1.UserProfileHandler)
@@ -44,11 +42,11 @@ func Route() *gin.Engine {
 			rapi1.GET("users/:id", api1.UserGETHandler)
 			rapi1.PUT("users/:id", api1.UserPUTHandler)
 			rapi1.PUT("users/:id/role",
-				mdwv1.MustHaveQueryParam(context.POST, "role"),
+				middlewares.MustHaveQueryParam(context.POST, "role"),
 				api1.UserChangeRoleHandler,
 			)
 			rapi1.PUT("users/:id/password",
-				mdwv1.MustHaveQueryParam(context.POST, "newpassword"),
+				middlewares.MustHaveQueryParam(context.POST, "newpassword"),
 				api1.UserChangePasswordHandler,
 			)
 		}
