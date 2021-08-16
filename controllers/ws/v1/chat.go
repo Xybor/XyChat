@@ -6,10 +6,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/xybor/xychat/helpers/context"
-	wshelpers "github.com/xybor/xychat/helpers/ws/v1"
-	r "github.com/xybor/xychat/representations/v1"
+	wshelpers "github.com/xybor/xychat/helpers/ws"
+	resources "github.com/xybor/xychat/resources/v1"
 	services "github.com/xybor/xychat/services/v1"
-	xyerrors "github.com/xybor/xychat/xyerrors/v1"
+	"github.com/xybor/xychat/xyerrors"
 )
 
 type clientMessage struct {
@@ -64,7 +64,7 @@ func WSChatHandler(ctx *gin.Context) {
 	}
 
 	// Forward the message from broadcast service to client
-	chatService.ChatHandler = func(cmr r.ChatMessageRepresentation) error {
+	chatService.ChatHandler = func(cmr resources.ChatMessageResponse) error {
 		response := wshelpers.NewWSResponse(cmr)
 		client.WriteJSON(response)
 		return nil

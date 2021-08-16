@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/xybor/xychat/models"
-	xyerrors "github.com/xybor/xychat/xyerrors/v1"
+	"github.com/xybor/xychat/xyerrors"
 
-	r "github.com/xybor/xychat/representations/v1"
+	resources "github.com/xybor/xychat/resources/v1"
 	"gorm.io/gorm"
 )
 
@@ -182,13 +182,13 @@ func (us *userService) Remove(id uint) xyerrors.XyError {
 	if us.user.ID != id {
 		us.load()
 
-		userR, xerr := us.Select(id)
+		userResponse, xerr := us.Select(id)
 		if xerr.Errno() != 0 {
 			return xerr
 		}
 
-		if compareRole(*us.user.Role, userR.Role) != 1 {
-			return xyerrors.ErrorPermission.New("You aren't entitled to remove the %s user", userR.Role)
+		if compareRole(*us.user.Role, userResponse.Role) != 1 {
+			return xyerrors.ErrorPermission.New("You aren't entitled to remove the %s user", userResponse.Role)
 		}
 	}
 
@@ -213,15 +213,15 @@ func (us *userService) RemoveByUsername(username string) xyerrors.XyError {
 		return xyerrors.ErrorPermission.New("You must login before")
 	}
 
-	userR, xerr := us.SelectByName(username)
+	userResponse, xerr := us.SelectByName(username)
 	if xerr.Errno() != 0 {
 		return xerr
 	}
 
-	if userR.ID != us.user.ID &&
-		compareRole(*us.user.Role, userR.Role) != 1 {
+	if userResponse.ID != us.user.ID &&
+		compareRole(*us.user.Role, userResponse.Role) != 1 {
 		return xyerrors.ErrorPermission.New(
-			"You aren't entitled to remove the %s user", userR.Role)
+			"You aren't entitled to remove the %s user", userResponse.Role)
 	}
 
 	err := models.GetDB().Where("username=?", username).Delete(&models.User{}).Error
@@ -233,21 +233,21 @@ func (us *userService) RemoveByUsername(username string) xyerrors.XyError {
 }
 
 // Authenticate checks if the given username and password belongs to a user.
-// If yes, it returns a userR of that user.
+// If yes, it returns a userResponse of that user.
 //
 // @error: ErrorFailedAuthentication, ErrorUnknown
 func (us *userService) Authenticate(
 	username, password string,
-) (*r.UserRepresentation, xyerrors.XyError) {
+) (*resources.UserResponse, xyerrors.XyError) {
 	us.validate()
 
-	userR := r.UserRepresentation{}
+	userResponse := resources.UserResponse{}
 
 	err := models.GetDB().
 		Select("id, username, role, age, gender").
 		Where("username = ? and password = ?", username, password).
 		First(&models.User{}).
-		Scan(&userR).Error
+		Scan(&userResponse).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -257,25 +257,25 @@ func (us *userService) Authenticate(
 		return nil, xyerrors.ErrorUnknown
 	}
 
-	return &userR, xyerrors.NoError
+	return &userResponse, xyerrors.NoError
 }
 
 // AuthenticateById is the same as Authenticate, except it uses id instead of
-// username.  It doesn't return userR.
+// username.  It doesn't return userResponse.
 //
 // @error: ErrorFailedAuthentication, ErrorUnknown
 func (us *userService) AuthenticateById(
 	id uint, password string,
-) (*r.UserRepresentation, xyerrors.XyError) {
+) (*resources.UserResponse, xyerrors.XyError) {
 	us.validate()
 
-	userR := r.UserRepresentation{}
+	userResponse := resources.UserResponse{}
 
 	err := models.GetDB().
 		Select("id, username, role, age, gender").
 		Where("id = ? and password = ?", id, password).
 		First(&models.User{}).
-		Scan(&userR).Error
+		Scan(&userResponse).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -285,16 +285,16 @@ func (us *userService) AuthenticateById(
 		return nil, xyerrors.ErrorUnknown
 	}
 
-	return &userR, xyerrors.NoError
+	return &userResponse, xyerrors.NoError
 }
 
-// Select gets the userR of a given userid from database.  It
+// Select gets the userResponse of a given userid from database.  It
 // needs a subject in service to determine the permission.
 //
 // @error: ErrorPermission, ErrorUnknown
 func (us *userService) Select(
 	id uint,
-) (*r.UserRepresentation, xyerrors.XyError) {
+) (*resources.UserResponse, xyerrors.XyError) {
 	us.validate()
 
 	if us.user == nil {
@@ -310,61 +310,61 @@ func (us *userService) Select(
 		}
 	}
 
-	userR := r.UserRepresentation{}
+	userResponse := resources.UserResponse{}
 	err := models.GetDB().
 		Select("ID, username, role, age, gender").
 		First(&models.User{}, id).
-		Scan(&userR).Error
+		Scan(&userResponse).Error
 
 	if err != nil {
 		return nil, xyerrors.ErrorUnknown
 	}
 
-	if us.user.ID != id && compareRole(*us.user.Role, userR.Role) != 1 {
+	if us.user.ID != id && compareRole(*us.user.Role, userResponse.Role) != 1 {
 		return nil, xyerrors.ErrorPermission.New(
-			"You aren't entitled to view the profile of a/an %s user", userR.Role)
+			"You aren't entitled to view the profile of a/an %s user", userResponse.Role)
 	}
 
-	return &userR, xyerrors.NoError
+	return &userResponse, xyerrors.NoError
 }
 
-// SelectByUsername gets the userR of a given name from database.  It
+// SelectByUsername gets the userResponse of a given name from database.  It
 // needs a subject in service to determine the permission.
 //
 // @error: ErrorPermission, ErrorUnknown
 func (us *userService) SelectByName(
 	username string,
-) (*r.UserRepresentation, xyerrors.XyError) {
+) (*resources.UserResponse, xyerrors.XyError) {
 	us.load()
 
 	if us.user == nil {
 		return nil, xyerrors.ErrorPermission.New("You must login before")
 	}
 
-	userR := r.UserRepresentation{}
+	userResponse := resources.UserResponse{}
 	err := models.GetDB().
 		Select("ID, username, role, age, gender").
 		Where("username=?", username).
 		First(&models.User{}).
-		Scan(&userR).Error
+		Scan(&userResponse).Error
 
 	if err != nil {
 		return nil, xyerrors.ErrorUnknown
 	}
 
-	if us.user.ID != userR.ID &&
-		compareRole(*us.user.Role, userR.Role) != 1 {
+	if us.user.ID != userResponse.ID &&
+		compareRole(*us.user.Role, userResponse.Role) != 1 {
 		return nil, xyerrors.ErrorPermission.New(
-			"You aren't entitled to view the profile of a/an %s user", userR.Role)
+			"You aren't entitled to view the profile of a/an %s user", userResponse.Role)
 	}
 
-	return &userR, xyerrors.NoError
+	return &userResponse, xyerrors.NoError
 }
 
 // SelfSelect is a shortcut of us.Select(us.user.ID).
 //
 // @error: ErrorPermission, ErrorUnknown
-func (us *userService) SelfSelect() (*r.UserRepresentation, xyerrors.XyError) {
+func (us *userService) SelfSelect() (*resources.UserResponse, xyerrors.XyError) {
 	us.validate()
 
 	if us.user == nil {
@@ -392,14 +392,14 @@ func (us *userService) UpdateInfo(
 	if us.user.ID != id {
 		us.load()
 
-		userR, xerr := us.Select(id)
+		userResponse, xerr := us.Select(id)
 		if xerr.Errno() != 0 {
 			return xerr
 		}
 
-		if compareRole(*us.user.Role, userR.Role) != 1 {
+		if compareRole(*us.user.Role, userResponse.Role) != 1 {
 			return xyerrors.ErrorPermission.New(
-				"You aren't entitled to update the profile of a/an %s user", userR.Role)
+				"You aren't entitled to update the profile of a/an %s user", userResponse.Role)
 		}
 	}
 
@@ -437,14 +437,14 @@ func (us *userService) UpdateRole(id uint, role string) xyerrors.XyError {
 		return xyerrors.ErrorPermission.New("You aren't entitled to update a user to %s", role)
 	}
 
-	userR, xerr := us.Select(id)
+	userResponse, xerr := us.Select(id)
 	if xerr.Errno() != 0 {
 		return xerr
 	}
 
-	if compareRole(*us.user.Role, userR.Role) != 1 {
+	if compareRole(*us.user.Role, userResponse.Role) != 1 {
 		return xyerrors.ErrorPermission.New(
-			"You aren't entitled to update the role of a/an %s user", userR.Role)
+			"You aren't entitled to update the role of a/an %s user", userResponse.Role)
 	}
 
 	user := models.User{BaseModel: models.BaseModel{ID: id}}
@@ -485,14 +485,14 @@ func (us *userService) UpdatePassword(id uint, oldpwd *string, newpwd string) xy
 		}
 	} else {
 		us.load()
-		userR, xerr := us.Select(id)
+		userResponse, xerr := us.Select(id)
 		if xerr.Errno() != 0 {
 			return xerr
 		}
 
-		if compareRole(*us.user.Role, userR.Role) != 1 {
+		if compareRole(*us.user.Role, userResponse.Role) != 1 {
 			return xyerrors.ErrorPermission.New(
-				"You aren't entitled to update password of a/an %s user", userR.Role)
+				"You aren't entitled to update password of a/an %s user", userResponse.Role)
 		}
 	}
 

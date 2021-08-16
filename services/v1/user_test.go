@@ -9,23 +9,25 @@ import (
 	"github.com/xybor/xychat/helpers"
 	"github.com/xybor/xychat/models"
 	services "github.com/xybor/xychat/services/v1"
-	xyerrors "github.com/xybor/xychat/xyerrors/v1"
+	"github.com/xybor/xychat/xyerrors"
 )
 
-var adminUsn = "admin"
-var adminPwd = "admin"
-var adminRole = "admin"
-var admin models.User
+var (
+	adminUsn  = "admin"
+	adminPwd  = "admin"
+	adminRole = "admin"
+	admin     models.User
 
-var modUsn = "mod"
-var modPwd = "mod"
-var modRole = "mod"
-var mod models.User
+	modUsn  = "mod"
+	modPwd  = "mod"
+	modRole = "mod"
+	mod     models.User
 
-var memUsn = "member"
-var memPwd = "member"
-var memRole = "member"
-var member models.User
+	memUsn  = "member"
+	memPwd  = "member"
+	memRole = "member"
+	member  models.User
+)
 
 func CreateUser(username, password, role string) (models.User, error) {
 	user := models.User{Username: &username, Password: &password, Role: &role}

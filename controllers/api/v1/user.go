@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	apihelper "github.com/xybor/xychat/helpers/api/v1"
+	apihelpers "github.com/xybor/xychat/helpers/api"
 	"github.com/xybor/xychat/helpers/context"
 	"github.com/xybor/xychat/helpers/tokens"
-	service "github.com/xybor/xychat/services/v1"
+	services "github.com/xybor/xychat/services/v1"
 )
 
 // UserRegisterHandler handles an incoming request with four query parameters:
@@ -29,19 +29,19 @@ func UserRegisterHandler(ctx *gin.Context) {
 	// By default, role is set as 'member' if it isn't provided.
 	role, err := context.RetrieveQuery(ctx, "role")
 	if err.Errno() != 0 {
-		role = service.RoleMember
+		role = services.RoleMember
 	}
 
-	userService := service.CreateUserService(id, true)
+	userService := services.CreateUserService(id, true)
 
 	xerr := userService.Register(username, password, role)
 	if xerr.Errno() != 0 {
-		response := apihelper.NewAPIError(xerr)
+		response := apihelpers.NewAPIError(xerr)
 		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
-	response := apihelper.NewAPIResponse(nil)
+	response := apihelpers.NewAPIResponse(nil)
 	ctx.JSON(http.StatusCreated, response)
 }
 
@@ -60,11 +60,11 @@ func UserAuthenticateHandler(ctx *gin.Context) {
 	password := context.MustRetrieveQuery(ctx, "password")
 
 	// Authentication doesn't need a subject to call the service
-	userService := service.CreateUserService(nil, true)
+	userService := services.CreateUserService(nil, true)
 
 	userRepresentation, xerr := userService.Authenticate(username, password)
 	if xerr.Errno() != 0 {
-		response := apihelper.NewAPIError(xerr)
+		response := apihelpers.NewAPIError(xerr)
 		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
@@ -74,7 +74,7 @@ func UserAuthenticateHandler(ctx *gin.Context) {
 
 	token, xerr := userToken.Generate()
 	if xerr.Errno() != 0 {
-		response := apihelper.NewAPIError(xerr)
+		response := apihelpers.NewAPIError(xerr)
 		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
@@ -84,7 +84,7 @@ func UserAuthenticateHandler(ctx *gin.Context) {
 	oneDay := 24 * 60 * 60
 	context.SetCookie(ctx, "xytok", token, oneDay)
 
-	response := apihelper.NewAPIResponse(userRepresentation)
+	response := apihelpers.NewAPIResponse(userRepresentation)
 	ctx.JSON(http.StatusOK, response)
 }
 
@@ -97,16 +97,16 @@ func UserAuthenticateHandler(ctx *gin.Context) {
 func UserProfileHandler(ctx *gin.Context) {
 	id := context.GetUID(ctx)
 
-	userService := service.CreateUserService(id, true)
+	userService := services.CreateUserService(id, true)
 
 	profile, xerr := userService.SelfSelect()
 	if xerr.Errno() != 0 {
-		response := apihelper.NewAPIError(xerr)
+		response := apihelpers.NewAPIError(xerr)
 		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
-	response := apihelper.NewAPIResponse(profile)
+	response := apihelpers.NewAPIResponse(profile)
 	ctx.JSON(http.StatusOK, response)
 }
 
@@ -121,21 +121,21 @@ func UserGETHandler(ctx *gin.Context) {
 	id := context.GetUID(ctx)
 	destId, xerr := context.GetURLParamAsUint(ctx, "id")
 	if xerr.Errno() != 0 {
-		response := apihelper.NewAPIError(xerr)
+		response := apihelpers.NewAPIError(xerr)
 		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
-	userService := service.CreateUserService(id, true)
+	userService := services.CreateUserService(id, true)
 
 	profile, xerr := userService.Select(destId)
 	if xerr.Errno() != 0 {
-		response := apihelper.NewAPIError(xerr)
+		response := apihelpers.NewAPIError(xerr)
 		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
-	response := apihelper.NewAPIResponse(profile)
+	response := apihelpers.NewAPIResponse(profile)
 	ctx.JSON(http.StatusOK, response)
 }
 
@@ -153,7 +153,7 @@ func UserPUTHandler(ctx *gin.Context) {
 
 	age, xerr := context.RetrieveQueryAsPUint(ctx, "age")
 	if xerr.Errno() != 0 {
-		response := apihelper.NewAPIError(xerr)
+		response := apihelpers.NewAPIError(xerr)
 		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
@@ -165,20 +165,20 @@ func UserPUTHandler(ctx *gin.Context) {
 	id := context.GetUID(ctx)
 	destId, xerr := context.GetURLParamAsUint(ctx, "id")
 	if xerr.Errno() != 0 {
-		response := apihelper.NewAPIError(xerr)
+		response := apihelpers.NewAPIError(xerr)
 		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
-	userService := service.CreateUserService(id, true)
+	userService := services.CreateUserService(id, true)
 	xerr = userService.UpdateInfo(destId, age, gender)
 	if xerr.Errno() != 0 {
-		response := apihelper.NewAPIError(xerr)
+		response := apihelpers.NewAPIError(xerr)
 		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
-	response := apihelper.NewAPIResponse(nil)
+	response := apihelpers.NewAPIResponse(nil)
 	ctx.JSON(http.StatusOK, response)
 }
 
@@ -196,22 +196,22 @@ func UserChangeRoleHandler(ctx *gin.Context) {
 
 	destId, xerr := context.GetURLParamAsUint(ctx, "id")
 	if xerr.Errno() != 0 {
-		response := apihelper.NewAPIError(xerr)
+		response := apihelpers.NewAPIError(xerr)
 		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
 	role := context.MustRetrieveQuery(ctx, "role")
 
-	userService := service.CreateUserService(id, true)
+	userService := services.CreateUserService(id, true)
 	xerr = userService.UpdateRole(destId, role)
 	if xerr.Errno() != 0 {
-		response := apihelper.NewAPIError(xerr)
+		response := apihelpers.NewAPIError(xerr)
 		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
-	response := apihelper.NewAPIResponse(nil)
+	response := apihelpers.NewAPIResponse(nil)
 	ctx.JSON(http.StatusOK, response)
 }
 
@@ -232,7 +232,7 @@ func UserChangePasswordHandler(ctx *gin.Context) {
 
 	destId, xerr := context.GetURLParamAsUint(ctx, "id")
 	if xerr.Errno() != 0 {
-		response := apihelper.NewAPIError(xerr)
+		response := apihelpers.NewAPIError(xerr)
 		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
@@ -240,14 +240,14 @@ func UserChangePasswordHandler(ctx *gin.Context) {
 	oldpassword := context.RetrieveQueryAsPString(ctx, "oldpassword")
 	newpassword := context.MustRetrieveQuery(ctx, "newpassword")
 
-	userService := service.CreateUserService(id, true)
+	userService := services.CreateUserService(id, true)
 	xerr = userService.UpdatePassword(destId, oldpassword, newpassword)
 	if xerr.Errno() != 0 {
-		response := apihelper.NewAPIError(xerr)
+		response := apihelpers.NewAPIError(xerr)
 		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
-	response := apihelper.NewAPIResponse(nil)
+	response := apihelpers.NewAPIResponse(nil)
 	ctx.JSON(http.StatusOK, response)
 }

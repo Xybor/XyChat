@@ -6,7 +6,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/xybor/xychat/helpers"
-	xyerrors "github.com/xybor/xychat/xyerrors/v1"
+	"github.com/xybor/xychat/xyerrors"
 )
 
 type userToken struct {

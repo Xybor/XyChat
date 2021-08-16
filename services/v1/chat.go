@@ -5,8 +5,8 @@ import (
 	"sync"
 
 	"github.com/xybor/xychat/models"
-	r "github.com/xybor/xychat/representations/v1"
-	xyerrors "github.com/xybor/xychat/xyerrors/v1"
+	resources "github.com/xybor/xychat/resources/v1"
+	"github.com/xybor/xychat/xyerrors"
 )
 
 // The management list of chatService.  Each user (id) can have many
@@ -19,7 +19,7 @@ type chatService struct {
 	us          userService
 	rooms       []*broadcastService
 	roomsMutex  sync.Mutex
-	ChatHandler func(r.ChatMessageRepresentation) error
+	ChatHandler func(resources.ChatMessageResponse) error
 }
 
 // addToChatServiceList adds a chatService to the management list.
@@ -287,14 +287,14 @@ func (cs *chatService) runAutoReceive() {
 			break
 		}
 
-		chatMsgR := r.ChatMessageRepresentation{
-			UserId:    msg.UserID,
-			RoomId:    msg.RoomID,
-			Message:   msg.Message,
-			CreatedAt: msg.CreatedAt,
+		chatMsgResponse := resources.ChatMessageResponse{
+			UserId:  msg.UserID,
+			RoomId:  msg.RoomID,
+			Message: msg.Message,
+			Time:    msg.CreatedAt,
 		}
 
-		err := cs.ChatHandler(chatMsgR)
+		err := cs.ChatHandler(chatMsgResponse)
 		if err != nil {
 			log.Println(err)
 			cs.Offline()

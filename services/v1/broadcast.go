@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/xybor/xychat/models"
-	xyerrors "github.com/xybor/xychat/xyerrors/v1"
+	"github.com/xybor/xychat/xyerrors"
 )
 
 type broadcastService struct {

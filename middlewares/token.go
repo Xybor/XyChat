@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/xybor/xychat/helpers/context"
 	"github.com/xybor/xychat/helpers/tokens"
-	xyerrors "github.com/xybor/xychat/xyerrors/v1"
+	"github.com/xybor/xychat/xyerrors"
 )
 
 // VerifyUserToken finds the token in incoming request and validates it.  If

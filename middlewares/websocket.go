@@ -7,8 +7,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	wshelper "github.com/xybor/xychat/helpers/ws/v1"
-	xyerrors "github.com/xybor/xychat/xyerrors/v1"
+	wshelpers "github.com/xybor/xychat/helpers/ws"
+	"github.com/xybor/xychat/xyerrors"
 )
 
 var upgrader = &websocket.Upgrader{
@@ -23,7 +23,7 @@ var upgrader = &websocket.Upgrader{
 // client.
 func UpgradeToWebSocket(ctx *gin.Context) {
 	if !ctx.IsWebsocket() {
-		response := wshelper.NewWSError(
+		response := wshelpers.NewWSError(
 			xyerrors.ErrorCannotUpgradeToWebsocket.New("Websocket is not allowed"))
 		ctx.JSON(xyerrors.ErrorCannotUpgradeToWebsocket.StatusCode(), response)
 		ctx.Abort()
@@ -34,7 +34,7 @@ func UpgradeToWebSocket(ctx *gin.Context) {
 	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
 		log.Println(err)
-		response := wshelper.NewWSError(
+		response := wshelpers.NewWSError(
 			xyerrors.ErrorUnknown.New("Can't upgrade to websocket because unknown reason"))
 		ctx.JSON(xyerrors.ErrorUnknown.StatusCode(), response)
 		ctx.Abort()

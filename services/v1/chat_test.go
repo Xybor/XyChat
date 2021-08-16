@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/xybor/xychat/models"
-	r "github.com/xybor/xychat/representations/v1"
+	resources "github.com/xybor/xychat/resources/v1"
 	services "github.com/xybor/xychat/services/v1"
 )
 
@@ -282,22 +282,22 @@ func TestChat(t *testing.T) {
 	chatService3.Online()
 	chatService4.Online()
 
-	chatService1.ChatHandler = func(cmr r.ChatMessageRepresentation) error {
+	chatService1.ChatHandler = func(cmr resources.ChatMessageResponse) error {
 		t.Logf("1 %d->%d: %s", cmr.UserId, cmr.RoomId, cmr.Message)
 		return nil
 	}
 
-	chatService2.ChatHandler = func(cmr r.ChatMessageRepresentation) error {
+	chatService2.ChatHandler = func(cmr resources.ChatMessageResponse) error {
 		t.Logf("2 %d->%d: %s", cmr.UserId, cmr.RoomId, cmr.Message)
 		return nil
 	}
 
-	chatService3.ChatHandler = func(cmr r.ChatMessageRepresentation) error {
+	chatService3.ChatHandler = func(cmr resources.ChatMessageResponse) error {
 		t.Logf("3 %d->%d: %s", cmr.UserId, cmr.RoomId, cmr.Message)
 		return nil
 	}
 
-	chatService4.ChatHandler = func(cmr r.ChatMessageRepresentation) error {
+	chatService4.ChatHandler = func(cmr resources.ChatMessageResponse) error {
 		t.Logf("4 %d->%d: %s", cmr.UserId, cmr.RoomId, cmr.Message)
 		return nil
 	}

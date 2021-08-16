@@ -4,10 +4,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/xybor/xychat/helpers/context"
-	wshelper "github.com/xybor/xychat/helpers/ws/v1"
-	representations "github.com/xybor/xychat/representations/v1"
-	service "github.com/xybor/xychat/services/v1"
-	xyerrors "github.com/xybor/xychat/xyerrors/v1"
+	wshelpers "github.com/xybor/xychat/helpers/ws"
+	resources "github.com/xybor/xychat/resources/v1"
+	services "github.com/xybor/xychat/services/v1"
+	"github.com/xybor/xychat/xyerrors"
 )
 
 // WSMatchHandler handles an incoming request which has already upgraded to
@@ -28,27 +28,27 @@ func WSMatchHandler(ctx *gin.Context) {
 
 	id := context.GetUID(ctx)
 
-	userService := service.CreateUserService(id, true)
-	matchService, xerr := service.CreateMatchService(userService)
+	userService := services.CreateUserService(id, true)
+	matchService, xerr := services.CreateMatchService(userService)
 	if xerr.Errno() != 0 {
-		response := wshelper.NewWSError(xerr)
+		response := wshelpers.NewWSError(xerr)
 		client.WriteJSON(response)
 		return
 	}
 
 	var isAlive = make(chan bool)
 
-	matchService.MatchHandler = func(room representations.RoomRepresentation) {
+	matchService.MatchHandler = func(room resources.RoomResponse) {
 		// 0 is an invalid room's identity, therefore it sends failure response to
 		// client.
 		if room.ID == 0 {
-			response := wshelper.NewWSError(xyerrors.ErrorUnknown.New("Can't match with anyone"))
+			response := wshelpers.NewWSError(xyerrors.ErrorUnknown.New("Can't match with anyone"))
 			client.WriteJSON(response)
 			return
 		}
 
 		// It sends room information to the client if success.
-		response := wshelper.NewWSResponse(room)
+		response := wshelpers.NewWSResponse(room)
 		client.WriteJSON(response)
 
 		isAlive <- false
