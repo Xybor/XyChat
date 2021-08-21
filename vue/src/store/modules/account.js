@@ -25,7 +25,6 @@ const state = isLogin
 
 const actions = {
   login({ dispatch, commit }, { username, password }) {
-    commit("loginRequest", { token: null, username: username });
     var rs = userSerive.login(username, password);
     rs.then((response) => {
       // Check if login success
@@ -105,13 +104,6 @@ const actions = {
 };
 
 const mutations = {
-  loginRequest(state, data) {
-    state.isLoggedIn = true;
-    state.accountInfo = {
-      username: data.username,
-      id: data.id,
-    };
-  },
   loginSuccess(state, data) {
     state.isLoggedIn = true;
     state.accountInfo = {
