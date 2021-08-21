@@ -3,6 +3,7 @@
 ## 0.0.3
 
 - Show the error message from response instead of an unclear notification
+- Fix login logic
 
 ## 0.0.2
 
