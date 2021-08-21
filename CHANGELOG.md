@@ -1,10 +1,24 @@
 # Change logs
 
+# Alpha.0.6
+## Alpha.0.6.2
+- Change `ClientMessage` struct to `ChatMessageRequest`.
+- Update specifications in FEATURES.md.
+
+## Alpha.0.6.1
+- Re-design request's parameter reading functions.
+- Change the format of all POST, PUT, DELETE requests from x-www-urlencoded-form to JSON.
+
 # Alpha.0.5
-## Alpha.0.5.1
-- Add chat feature with websocket at `/ws/v1/chat`.
-- Allow CORS by using environment variable.
-- Split README.md into many files.
+## Alpha.0.5.4
+- Re-design middlewares, helpers/(api|ws).
+- Change the folder representations to resources.
+- Update FEATURES.md with new version convention.
+
+## Alpha.0.5.3
+- Return user information in auth API.
+- Re-design the error management.
+- Remove ApplyAPIHeader.
 
 ## Alpha.0.5.2
 - Use TLS environment variable to dynamically enable HTTPS method.
@@ -12,15 +26,11 @@
 - Use XYCHAT environment variable to determine that the application is running
 for what (test, debug or release).
 
-## Alpha.0.5.3
-- Return user information in auth API.
-- Re-design the error management.
-- Remove ApplyAPIHeader.
+## Alpha.0.5.1
+- Add chat feature with websocket at `/ws/v1/chat`.
+- Allow CORS by using environment variable.
+- Split README.md into many files.
 
-## Alpha.0.5.4
-- Re-design middlewares, helpers/(api|ws).
-- Change the folder representations to resources.
-- Update FEATURES.md with new version convention.
 
 
 # Alpha.0.4

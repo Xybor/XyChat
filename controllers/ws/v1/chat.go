@@ -5,29 +5,33 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"github.com/xybor/xychat/helpers/context"
-	wshelpers "github.com/xybor/xychat/helpers/ws"
+	"github.com/xybor/xychat/helpers"
+	"github.com/xybor/xychat/helpers/ws"
+	"github.com/xybor/xychat/helpers/xybinders"
 	resources "github.com/xybor/xychat/resources/v1"
 	services "github.com/xybor/xychat/services/v1"
 	"github.com/xybor/xychat/xyerrors"
 )
 
-type clientMessage struct {
-	RoomId  uint   `json:"roomid"`
-	Message string `json:"message"`
-}
-
+// WSChatHandler handles a connection in a websocket protocol and communicates
+// chat messages with client.
 func WSChatHandler(ctx *gin.Context) {
 	connection := ctx.MustGet("WebSocket")
 	conn := connection.(*websocket.Conn)
-	client := CreateWSClient(conn)
+	client := ws.CreateWSClient(conn)
 
-	uid := context.GetUID(ctx)
-	userService := services.CreateUserService(uid, true)
+	request := resources.WebSocketRequest{}
+	xerr := xybinders.Bind(ctx, &request, xybinders.Context)
+	if xerr.Errno() != 0 {
+		response := helpers.NewErrorResponse(xerr)
+		client.WriteJSON(response)
+		client.Close()
+	}
 
+	userService := services.CreateUserService(request.SrcId, true)
 	chatService, xerr := services.CreateChatService(userService)
 	if xerr.Errno() != 0 {
-		response := wshelpers.NewWSError(xerr)
+		response := helpers.NewErrorResponse(xerr)
 		client.WriteJSON(response)
 		return
 	}
@@ -45,17 +49,17 @@ func WSChatHandler(ctx *gin.Context) {
 
 	// Receive a message from the client and send it to the corresponding room.
 	client.ReadHandler = func(message []byte) error {
-		msg := clientMessage{}
+		msg := resources.ChatMessageRequest{}
 		err := json.Unmarshal(message, &msg)
 		if err != nil {
-			response := wshelpers.NewWSError(xyerrors.ErrorSyntaxInput.New("invalid json format"))
+			response := helpers.NewErrorResponse(xyerrors.ErrorSyntaxInput.New("invalid json format"))
 			client.WriteJSON(response)
 			return nil
 		}
 
 		xerr = chatService.SendTo(msg.RoomId, msg.Message)
 		if xerr.Errno() != 0 {
-			response := wshelpers.NewWSError(xerr)
+			response := helpers.NewErrorResponse(xerr)
 			client.WriteJSON(response)
 			return nil
 		}
@@ -65,7 +69,7 @@ func WSChatHandler(ctx *gin.Context) {
 
 	// Forward the message from broadcast service to client
 	chatService.ChatHandler = func(cmr resources.ChatMessageResponse) error {
-		response := wshelpers.NewWSResponse(cmr)
+		response := helpers.NewResponse(cmr)
 		client.WriteJSON(response)
 		return nil
 	}

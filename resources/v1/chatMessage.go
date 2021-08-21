@@ -8,3 +8,8 @@ type ChatMessageResponse struct {
 	Message string    `json:"message"`
 	Time    time.Time `json:"time"`
 }
+
+type ChatMessageRequest struct {
+	RoomId  uint   `json:"roomid"`
+	Message string `json:"message"`
+}

@@ -12,7 +12,6 @@ import (
 // ApplyCORSHeader adds the Access-Control-Allow-Origin to the header of
 // response.
 func ApplyCORSHeader() gin.HandlerFunc {
-	domains, err := helpers.ReadEnv("CORS")
 	config := cors.Config{
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
 		AllowHeaders:     []string{"Origin"},
@@ -22,6 +21,7 @@ func ApplyCORSHeader() gin.HandlerFunc {
 		MaxAge:           2 * time.Hour,
 	}
 
+	domains, err := helpers.ReadEnv("CORS")
 	if err != nil {
 		config.AllowAllOrigins = true
 	} else {

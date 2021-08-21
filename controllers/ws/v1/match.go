@@ -3,35 +3,35 @@ package v1
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"github.com/xybor/xychat/helpers/context"
-	wshelpers "github.com/xybor/xychat/helpers/ws"
+	"github.com/xybor/xychat/helpers"
+	"github.com/xybor/xychat/helpers/ws"
+	"github.com/xybor/xychat/helpers/xybinders"
 	resources "github.com/xybor/xychat/resources/v1"
 	services "github.com/xybor/xychat/services/v1"
 	"github.com/xybor/xychat/xyerrors"
 )
 
-// WSMatchHandler handles an incoming request which has already upgraded to
-// websocket connection.
-//
-// It requires the authenticated token to push the user to matchQueue.
-//
-// After it finds a match or occurs an error, it sends a message to the client
-// and closes the connection.
-//
-// Note that a user has only a connection to the matchQueue.
+// WSMatchHandler handles a connection in websocket protocol and calls match
+// service to find a match for client.
 func WSMatchHandler(ctx *gin.Context) {
 	connection := ctx.MustGet("WebSocket")
 	conn := connection.(*websocket.Conn)
-	client := CreateWSClient(conn)
+	client := ws.CreateWSClient(conn)
 
 	defer client.Close()
 
-	id := context.GetUID(ctx)
+	request := resources.WebSocketRequest{}
+	xerr := xybinders.Bind(ctx, &request, xybinders.Context)
+	if xerr.Errno() != 0 {
+		response := helpers.NewErrorResponse(xerr)
+		client.WriteJSON(response)
+		client.Close()
+	}
 
-	userService := services.CreateUserService(id, true)
+	userService := services.CreateUserService(request.SrcId, true)
 	matchService, xerr := services.CreateMatchService(userService)
 	if xerr.Errno() != 0 {
-		response := wshelpers.NewWSError(xerr)
+		response := helpers.NewErrorResponse(xerr)
 		client.WriteJSON(response)
 		return
 	}
@@ -42,13 +42,13 @@ func WSMatchHandler(ctx *gin.Context) {
 		// 0 is an invalid room's identity, therefore it sends failure response to
 		// client.
 		if room.ID == 0 {
-			response := wshelpers.NewWSError(xyerrors.ErrorUnknown.New("Can't match with anyone"))
+			response := helpers.NewErrorResponse(xyerrors.ErrorUnknown.New("Can't match with anyone"))
 			client.WriteJSON(response)
 			return
 		}
 
 		// It sends room information to the client if success.
-		response := wshelpers.NewWSResponse(room)
+		response := helpers.NewResponse(room)
 		client.WriteJSON(response)
 
 		isAlive <- false

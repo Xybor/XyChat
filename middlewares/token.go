@@ -4,45 +4,42 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
-	"github.com/xybor/xychat/helpers/context"
 	"github.com/xybor/xychat/helpers/tokens"
+	"github.com/xybor/xychat/helpers/xybinders"
 	"github.com/xybor/xychat/xyerrors"
 )
+
+type XyTokRequest struct {
+	Xytok string `form:"xytok" cookie:"xytok" validate:"required"`
+}
 
 // VerifyUserToken finds the token in incoming request and validates it.  If
 // there is a valid token, it will set the token's id as a parameter UID in the
 // context;
 func VerifyUserToken(cookie bool) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var token string
-		var err error
 		var xerr xyerrors.XyError
+		request := XyTokRequest{}
 
 		if !cookie {
-			context.SetRetrievingMethod(context.GET)
-			token, xerr = context.RetrieveQuery(ctx, "xytok")
-			if xerr.Errno() != 0 {
-				err = xerr
-			} else {
-				err = nil
-			}
+			xerr = xybinders.Bind(ctx, &request, xybinders.Query)
 		} else {
-			token, err = ctx.Cookie("xytok")
+			xerr = xybinders.Bind(ctx, &request, xybinders.Cookie)
 		}
 
-		if err != nil {
+		if xerr.Errno() != 0 {
 			return
 		}
 
 		userToken := tokens.CreateEmptyUserToken()
 
-		xerr = userToken.Validate(token)
+		xerr = userToken.Validate(request.Xytok)
 		if xerr.Errno() != 0 {
 			log.Println(xerr)
 			return
 		}
 
 		id := userToken.GetUID()
-		ctx.Set("UID", id)
+		ctx.Set("id", id)
 	}
 }
