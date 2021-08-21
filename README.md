@@ -1,22 +1,19 @@
 # XyChat
-
-A chat application built with Golang, VueJS, and PostgreSQL.
+A chat application server built with Golang and PostgreSQL. You can find some frontend applications of this server [here](https://github.com/xybor).
 
 # DEPLOYMENT
-See [deployment](./DEPLOYMENT.md).
+See [DEPLOYMENT.md](./DEPLOYMENT.md).
 
-If you want to enable HTTPS in the application, see [tls](./TLS.md).
+If you want to enable HTTPS in the application, see [TLS.md](./TLS.md).
 
 # FEATURES
-See [features](./FEATURES.md).
+See [FEATURES.md](./FEATURES.md).
 
-# DESIGN OF THE PROJECT
-See [design](./DESIGN.md).
+# DESIGN OF THE APPLICATION
+See [DESIGN.md](./DESIGN.md).
 
 # CHANGE LOGS
-See [changelog](./CHANGELOG.md).
+See [CHANGELOG.md](./CHANGELOG.md).
 
 # AUTHORS
-<a href="https://github.com/huykingsofm" style="pointer-events: none;" target="_blank"><img src="https://img.shields.io/badge/backend-huykingsofm-informational"></a>
-<a href="https://github.com/h40huynh" style="pointer-events: none;" target="_blank"><img src="https://img.shields.io/badge/frontend-h40huynh-informational"></a> 
-<a href="https://github.com/irisdecembre" style="pointer-events: none;" target="_blank"><img src="https://img.shields.io/badge/designer-irisdecembre-informational"></a>
+<a href="https://github.com/huykingsofm" style="pointer-events: none;" target="_blank"><img src="https://img.shields.io/badge/github-huykingsofm-informational"></a>
