@@ -64,7 +64,7 @@ Xychat$ go run main.go -h
 ```
 
 ## Step 6. Access the application
-See the [FEATURES.md](./FEATURES.md) for all APIs of the application.
+The application now can be accessed at http://localhost:port or https://localhost:port (depend on TLS environment variable). See the [FEATURES.md](./FEATURES.md) for all APIs of the application.
 
 ## Some option examples
 
@@ -81,7 +81,7 @@ environment variable.  The form of that variable must be `<username>:<password>`
 Xychat$ main -admin ADMIN
 ```
 
-Use the .env file instead of environment variables
+Use the [.env]() file instead of environment variables
 
 ```shell
 Xychat$ main -dotenv
@@ -152,4 +152,4 @@ Xychat$ git push heroku main:main
 ## Step 7. Access the application
 
 If lucky, there is no error when you are installing, you can access the application
-now by the domain on herokuapp.com. See all APIs in [FEATURES.md](./FEATURES.md)
+now by the domain on herokuapp.com. See all APIs in [FEATURES.md](./FEATURES.md).

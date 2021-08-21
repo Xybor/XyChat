@@ -31,7 +31,7 @@ Note that all variables must be uppercase
 |Name|Optional|Meaning|Example|
 |----|--|-------|-------|
 |XYCHAT|yes|Which state the application is running for, test, debug, or release. The default value is debug.|debug|
-|DOMAIN||The current hosting domain|localhost|
+|DOMAIN||The mainly hosting domain|localhost|
 |PORT||The current hosting port|8080|
 |POSTGRES_HOST|yes|The hostname of postgreSQL database|localhost|
 |POSTGRES_PORT|yes|The port of portgreSQL database|5432|
