@@ -9,7 +9,7 @@
 ## Step 1. Create a database in your PostgreSQL
 
 ## Step 2. Setup environment variables
-
+For further details, see [EVAR.md](./EVAR.md)
 Method 1: Set environment variables with the same name as [.env.example](./.env.example) file. Example:
 
 ```shell
@@ -63,9 +63,8 @@ Xychat$ main -h
 Xychat$ go run main.go -h
 ```
 
-## Step 6. Open the application
-
-Now open your browser and access the web at `http://domain:port/ui/`. Example: [http://localhost:1999/ui](http://localhost:1999/ui).
+## Step 6. Access the application
+The application now can be accessed at http://localhost:port or https://localhost:port (depend on TLS environment variable). See the [FEATURES.md](./FEATURES.md) for all APIs of the application.
 
 ## Some option examples
 
@@ -82,7 +81,7 @@ environment variable.  The form of that variable must be `<username>:<password>`
 Xychat$ main -admin ADMIN
 ```
 
-Use the .env file instead of environment variables
+Use the [.env]() file instead of environment variables
 
 ```shell
 Xychat$ main -dotenv
@@ -150,35 +149,7 @@ Xychat$ heroku config:set DOMAIN=XXX.herokuapp.com PORT=1999
 Xychat$ git push heroku main:main
 ```
 
-## Step 7. Open the application
+## Step 7. Access the application
 
-If lucky, there is no error when you are installing, you can open the app now:
-
-```shell
-Xychat$ heroku open
-```
-
-
-# VUEJS BUILD
-
-```shell
-Xychat$ cd vue
-```
-
-Install node packages
-
-```shell
-Xychat/vue$ npm install
-```
-
-For develop
-
-```shell
-Xychat/vue$ npm run serve
-```
-
-For deploy
-
-```shell
-Xychat/vue$ npm run build
-```
+If lucky, there is no error when you are installing, you can access the application
+now by the domain on herokuapp.com. See all APIs in [FEATURES.md](./FEATURES.md).

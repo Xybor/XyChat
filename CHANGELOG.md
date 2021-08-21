@@ -1,6 +1,10 @@
 # Change logs
 
 # Alpha.0.6
+# Alpha.0.6.3
+- Migrate vuejs frontend to https://github.com/xybor/xyvuechat.
+- Update guidelines.
+
 ## Alpha.0.6.2
 - Change `ClientMessage` struct to `ChatMessageRequest`.
 - Update specifications in FEATURES.md.
