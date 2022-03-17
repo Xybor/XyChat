@@ -1,256 +1,200 @@
 package v1
 
 import (
-	"log"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	ctrl "github.com/xybor/xychat/controllers"
-	apihelper "github.com/xybor/xychat/helpers/api/v1"
-	"github.com/xybor/xychat/helpers/context"
+	"github.com/xybor/xychat/helpers"
 	"github.com/xybor/xychat/helpers/tokens"
-	service "github.com/xybor/xychat/services/v1"
+	"github.com/xybor/xychat/helpers/xybinders"
+	resources "github.com/xybor/xychat/resources/v1"
+	services "github.com/xybor/xychat/services/v1"
 )
 
-// UserRegisterHandler handles an incoming request with four query parameters:
-// username, password, and (optional) token, role.
-//
-// Behavior: It registers a user account with the provided information.  If the
-// role is a member, it doesn't need a subject to register; otherwise, the
-// subject must be higher role.
-//
-// Response: An error message.
+// UserRegisterHandler handles an incoming request and registers a user if it
+// is valid.
 func UserRegisterHandler(ctx *gin.Context) {
-	context.SetRetrievingMethod(context.GET)
-
-	id := context.GetUID(ctx)
-	username := context.MustRetrieveQuery(ctx, "username")
-	password := context.MustRetrieveQuery(ctx, "password")
-
-	// By default, role is set as 'member' if it isn't provided.
-	role, err := context.RetrieveQuery(ctx, "role")
-	if err != nil {
-		role = service.RoleMember
-	}
-
-	userService := service.CreateUserService(id)
-
-	err = userService.Register(username, password, role)
-	if err != nil {
-		response := apihelper.NewAPIError(ctrl.ErrorFailedProcess, err.Error())
-		ctx.JSON(http.StatusUnprocessableEntity, response)
+	request := new(resources.UserRegisterRequest)
+	xerr := xybinders.Bind(ctx, request, xybinders.Json, xybinders.Context)
+	if xerr.Errno() != 0 {
+		response := helpers.NewErrorResponse(xerr)
+		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
-	response := apihelper.NewEmptyAPIResponse()
-	ctx.JSON(http.StatusAccepted, response)
+	// By default, role is set as 'member' if it isn't provided.
+	if request.Role == nil {
+		role := services.RoleMember
+		request.Role = &role
+	}
+
+	userService := services.CreateUserService(request.SrcId, true)
+
+	xerr = userService.Register(request.Username, request.Password, *request.Role)
+	if xerr.Errno() != 0 {
+		response := helpers.NewErrorResponse(xerr)
+		ctx.JSON(xerr.StatusCode(), response)
+		return
+	}
+
+	response := helpers.NewResponse(nil)
+	ctx.JSON(http.StatusCreated, response)
 }
 
-// UserAuthenticateHandler handles an incoming request with three query
-// parameters: username, password, and (optional) token.
-//
-// Behavior: It authenticates the user account with the provided information
-// and generates an authenticated token.
-//
-// Response: A token in the body (for debugging) and as a cookie + An error
-// message.
+// UserAuthenticateHandler handles an incoming request and responds a cookie
+// containing authenticated token if it is valid.
 func UserAuthenticateHandler(ctx *gin.Context) {
-	context.SetRetrievingMethod(context.GET)
-
-	username := context.MustRetrieveQuery(ctx, "username")
-	password := context.MustRetrieveQuery(ctx, "password")
+	request := new(resources.UserAuthenticateRequest)
+	xerr := xybinders.Bind(ctx, request, xybinders.Json)
+	if xerr.Errno() != 0 {
+		response := helpers.NewErrorResponse(xerr)
+		ctx.JSON(xerr.StatusCode(), response)
+		return
+	}
 
 	// Authentication doesn't need a subject to call the service
-	userService := service.CreateUserService(nil)
+	userService := services.CreateUserService(nil, true)
 
-	userRepresentation, err := userService.Authenticate(username, password)
-	if err != nil {
-		response := apihelper.NewAPIError(ctrl.ErrorFailedProcess, err.Error())
-		ctx.JSON(http.StatusUnauthorized, response)
+	userRepresentation, xerr := userService.Authenticate(request.Username, request.Password)
+	if xerr.Errno() != 0 {
+		response := helpers.NewErrorResponse(xerr)
+		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
 	// Create a token with the expired duration is 24 hours
 	userToken := tokens.CreateUserToken(userRepresentation.ID, 24*time.Hour)
 
-	token, err := userToken.Generate()
-	if err != nil {
-		log.Println(err)
-		response := apihelper.NewAPIError(ctrl.ErrorFailedProcess, "couldn't create token")
-		ctx.JSON(http.StatusUnprocessableEntity, response)
+	token, xerr := userToken.Generate()
+	if xerr.Errno() != 0 {
+		response := helpers.NewErrorResponse(xerr)
+		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
 	// Set the token as a cookie.  It is configured as httponly for safety and
 	// affects on all url.
-	dayTime := 24 * 60 * 60
-	context.SetCookie(ctx, "auth", token, dayTime)
+	oneDay := 24 * 60 * 60
+	helpers.SetCookie(ctx, "xytok", token, oneDay)
 
-	response := apihelper.NewAPIResponse(map[string]string{"token": token})
-	ctx.JSON(http.StatusAccepted, response)
+	response := helpers.NewResponse(userRepresentation)
+	ctx.JSON(http.StatusOK, response)
 }
 
-// UserProfileHandler handles an incoming request with one optional query
-// parameter: token.
-//
-// Behavior: It gets the profile of the user determined by the token.
-//
-// Response: A profile + An error message.
+// UserProfileHandler handles an incoming request and responds the current
+// user's profile.
 func UserProfileHandler(ctx *gin.Context) {
-	id := context.GetUID(ctx)
-
-	userService := service.CreateUserService(id)
-
-	profile, err := userService.SelfSelect()
-	if err != nil {
-		response := apihelper.NewAPIError(ctrl.ErrorFailedProcess, err.Error())
-		ctx.JSON(http.StatusUnprocessableEntity, response)
+	request := resources.UserProfileRequest{}
+	xerr := xybinders.Bind(ctx, &request, xybinders.Context)
+	if xerr.Errno() != 0 {
+		response := helpers.NewErrorResponse(xerr)
+		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
-	response := apihelper.NewAPIResponse(profile)
+	userService := services.CreateUserService(request.SrcID, true)
+
+	profile, xerr := userService.SelfSelect()
+	if xerr.Errno() != 0 {
+		response := helpers.NewErrorResponse(xerr)
+		ctx.JSON(xerr.StatusCode(), response)
+		return
+	}
+
+	response := helpers.NewResponse(profile)
 	ctx.JSON(http.StatusOK, response)
 }
 
-// UserGETHandler handles an incoming GET request of url /users/:id with one
-// optional query parameter: token.
-//
-// Behavior: It gets the profile of a user determined by URL parameter id.  The
-// subject is determined by the token.
-//
-// Response: A profile + An error message.
-func UserGETHandler(ctx *gin.Context) {
-	id := context.GetUID(ctx)
-	destId, err := context.GetURLParamAsUint(ctx, "id")
-	if err != nil {
-		response := apihelper.NewAPIError(ctrl.ErrorInput, "couldn't parse id")
-		ctx.JSON(http.StatusBadRequest, response)
+// UserSelectHandler handles an incoming request and responds the profile of a
+// specific user.
+func UserSelectHandler(ctx *gin.Context) {
+	request := resources.UserSelectRequest{}
+	xerr := xybinders.Bind(ctx, &request, xybinders.Context, xybinders.Uri)
+	if xerr.Errno() != 0 {
+		response := helpers.NewErrorResponse(xerr)
+		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
-	userService := service.CreateUserService(id)
+	userService := services.CreateUserService(request.SrcID, true)
 
-	profile, err := userService.Select(destId)
-	if err != nil {
-		response := apihelper.NewAPIError(ctrl.ErrorFailedProcess, err.Error())
-		ctx.JSON(http.StatusUnprocessableEntity, response)
+	profile, xerr := userService.Select(request.DstID)
+	if xerr.Errno() != 0 {
+		response := helpers.NewErrorResponse(xerr)
+		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
-	response := apihelper.NewAPIResponse(profile)
+	response := helpers.NewResponse(profile)
 	ctx.JSON(http.StatusOK, response)
 }
 
-// UserPUTHandler handles an incoming PUT request of url /users/:id with three
-// optional query parameters: token, age, gender.
-//
-// Behavior: It updates age and gender of the current profile.  The subject is
-// determined by token.  The affected object is determined by the URL
-// parameter.  If the request doesn't provide age or gender, they will be set
-// to null (a.k.a be deleted).
-//
-// Response: An error message.
-func UserPUTHandler(ctx *gin.Context) {
-	context.SetRetrievingMethod(context.GET)
-
-	age, err := context.RetrieveQueryAsPUint(ctx, "age")
-	if err != nil {
-		response := apihelper.NewAPIError(ctrl.ErrorInvalidInput, "invalid age")
-		ctx.JSON(http.StatusBadRequest, response)
+// UserUpdateHandler handles an incoming request and updates age and gender of
+// a specific user.
+func UserUpdateHandler(ctx *gin.Context) {
+	request := resources.UserUpdateRequest{}
+	xerr := xybinders.Bind(ctx, &request, xybinders.Context, xybinders.Uri, xybinders.Json)
+	if xerr.Errno() != 0 {
+		response := helpers.NewErrorResponse(xerr)
+		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
-	// Gender has been already a string, so that it doesn't have any error to
-	// handle.
-	gender := context.RetrieveQueryAsPString(ctx, "gender")
-
-	id := context.GetUID(ctx)
-	destId, err := context.GetURLParamAsUint(ctx, "id")
-	if err != nil {
-		response := apihelper.NewAPIError(ctrl.ErrorInput, "couldn't parse id")
-		ctx.JSON(http.StatusBadRequest, response)
+	userService := services.CreateUserService(request.SrcId, true)
+	xerr = userService.UpdateInfo(request.DstID, request.Age, request.Gender)
+	if xerr.Errno() != 0 {
+		response := helpers.NewErrorResponse(xerr)
+		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
-	userService := service.CreateUserService(id)
-	err = userService.UpdateInfo(destId, age, gender)
-	if err != nil {
-		response := apihelper.NewAPIError(ctrl.ErrorFailedProcess, err.Error())
-		ctx.JSON(http.StatusUnprocessableEntity, response)
-		return
-	}
-
-	response := apihelper.NewEmptyAPIResponse()
+	response := helpers.NewResponse(nil)
 	ctx.JSON(http.StatusOK, response)
 }
 
-// UserChangRoleHandler handles an incoming PUT request of url /users/:id/role
-// with two query parameters: role and (optional) token.
-//
-// Behavior: It updates role of the current profile.  The subject is determined
-// by token.  The affected object is determined by the URL parameter.
-//
-// Response: An error message.
-func UserChangeRoleHandler(ctx *gin.Context) {
-	context.SetRetrievingMethod(context.GET)
-
-	id := context.GetUID(ctx)
-
-	destId, err := context.GetURLParamAsUint(ctx, "id")
-	if err != nil {
-		response := apihelper.NewAPIError(ctrl.ErrorInput, "couldn't parse id")
-		ctx.JSON(http.StatusBadRequest, response)
+// UserChangRoleHandler handles an incoming request and updates role of a
+// specific user.
+func UserUpdateRoleHandler(ctx *gin.Context) {
+	request := resources.UserUpdateRoleRequest{}
+	xerr := xybinders.Bind(ctx, &request, xybinders.Context, xybinders.Json, xybinders.Uri)
+	if xerr.Errno() != 0 {
+		response := helpers.NewErrorResponse(xerr)
+		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
-	role := context.MustRetrieveQuery(ctx, "role")
-
-	userService := service.CreateUserService(id)
-	err = userService.UpdateRole(destId, role)
-	if err != nil {
-		response := apihelper.NewAPIError(ctrl.ErrorFailedProcess, err.Error())
-		ctx.JSON(http.StatusUnprocessableEntity, response)
+	userService := services.CreateUserService(request.SrcId, true)
+	xerr = userService.UpdateRole(request.DstID, request.Role)
+	if xerr.Errno() != 0 {
+		response := helpers.NewErrorResponse(xerr)
+		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
-	response := apihelper.NewEmptyAPIResponse()
+	response := helpers.NewResponse(nil)
 	ctx.JSON(http.StatusOK, response)
 }
 
-// UserChangPasswordHandler handles an incoming PUT request of url
-// /users/:id/password with three query parameters: newpassword and (optional)
-// token, oldpassword.
-//
-// Behavior: It updates password of the current profile.  The subject is
-// determined by token.  The affected object is determined by the URL
-// parameter.  If the subject is higher role than the object, it doesn't need
-// the oldpassword.
-//
-// Response: An error message.
+// UserChangPasswordHandler handles an incoming request and changes the
+// password of a specific user.
 func UserChangePasswordHandler(ctx *gin.Context) {
-	context.SetRetrievingMethod(context.GET)
-
-	id := context.GetUID(ctx)
-
-	destId, err := context.GetURLParamAsUint(ctx, "id")
-	if err != nil {
-		response := apihelper.NewAPIError(ctrl.ErrorInput, "couldn't parse id")
-		ctx.JSON(http.StatusBadRequest, response)
+	request := resources.UserUpdatePasswordRequest{}
+	xerr := xybinders.Bind(ctx, &request, xybinders.Context, xybinders.Uri, xybinders.Json)
+	if xerr.Errno() != 0 {
+		response := helpers.NewErrorResponse(xerr)
+		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
-	oldpassword := context.RetrieveQueryAsPString(ctx, "oldpassword")
-	newpassword := context.MustRetrieveQuery(ctx, "newpassword")
-
-	userService := service.CreateUserService(id)
-	err = userService.UpdatePassword(destId, oldpassword, newpassword)
-	if err != nil {
-		response := apihelper.NewAPIError(ctrl.ErrorFailedProcess, err.Error())
-		ctx.JSON(http.StatusUnprocessableEntity, response)
+	userService := services.CreateUserService(request.SrcId, true)
+	xerr = userService.UpdatePassword(request.DstId, request.OldPassword, request.NewPassword)
+	if xerr.Errno() != 0 {
+		response := helpers.NewErrorResponse(xerr)
+		ctx.JSON(xerr.StatusCode(), response)
 		return
 	}
 
-	response := apihelper.NewEmptyAPIResponse()
+	response := helpers.NewResponse(nil)
 	ctx.JSON(http.StatusOK, response)
 }

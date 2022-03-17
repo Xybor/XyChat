@@ -4,70 +4,100 @@ import (
 	"log"
 	"sync"
 	"time"
+
+	resources "github.com/xybor/xychat/resources/v1"
+	"github.com/xybor/xychat/xyerrors"
 )
 
 type matchQueue struct {
 	// The channel receives registered clientService
-	register chan *clientService
+	register chan *matchService
 
 	// The channel receives unregistered clientService
-	unregister chan *clientService
+	unregister chan *matchService
 
 	// The lock struct prevents accessing to clients map at the same time
 	mutex sync.Mutex
 
-	// The map stores all clientServices in the queue
-	clients map[*clientService]bool
+	// The map stores all matchServices in the queue
+	queue map[*matchService]bool
 }
 
 var queue *matchQueue
 
-// InitializeMatchQueue creates a MatchQueue and runs two goroutines.  The
-// matchQueue.runRegister will receive all register and unregister signal.  The
-// matchQueue.runMatch will run matching algorithms every N seconds.
-func InitializeMatchQueue() {
+// InitializeMatchQueue creates a matchQueue.
+//
+// @goroutine: matchQueue.runRegister, matchQueue.runMatch
+func InitializeMatchQueue(match_every time.Duration) {
 	queue = &matchQueue{
-		register:   make(chan *clientService),
-		unregister: make(chan *clientService),
-		clients:    map[*clientService]bool{},
+		register:   make(chan *matchService),
+		unregister: make(chan *matchService),
+		queue:      map[*matchService]bool{},
 	}
 
 	go queue.runRegister()
-	go queue.runMatch(60 * time.Second)
+	go queue.runMatch(match_every)
 }
 
-// GetMatchQueue returns the current matchQueue
+// GetMatchQueue returns the current matchQueue.  It is only available when the
+// InitializeMatchQueue() is called.
 func GetMatchQueue() *matchQueue {
 	return queue
 }
 
+// GetQueue gets the matchService queue in the matchQueue struct.
+//
+// @note: for only debugging purpose.
+func (q *matchQueue) GetQueue() map[*matchService]bool {
+	return q.queue
+}
+
+// GetQueueLen returns the number of matchService in the matchQueue.
+//
+// @note: for only debugging purpose.
+func (q *matchQueue) GetQueueLen() int {
+	return len(q.queue)
+}
+
+// runRegister waits for register and unregister signals by matchServices from
+// a channel and processes them.
 func (q *matchQueue) runRegister() {
 	for {
 		select {
 		case user := <-q.register:
-			q.mutex.Lock()
-			if _, ok := q.clients[user]; !ok {
-				q.clients[user] = true
-			}
-			q.mutex.Unlock()
+			func() {
+				q.mutex.Lock()
+				defer q.mutex.Unlock()
+
+				if _, ok := q.queue[user]; !ok {
+					q.queue[user] = true
+				}
+			}()
 
 		case user := <-q.unregister:
-			// If a clientService unregisters, it will send zero value (invalid
-			// roomid) to clientService and delete it from queue.
-			q.mutex.Lock()
-			user.joinRoom <- 0
-			delete(q.clients, user)
-			q.mutex.Unlock()
+			// If a matchService unregisters, it will send zero value (invalid
+			// roomid) to matchService and delete it from queue.
+			func() {
+				q.mutex.Lock()
+				defer q.mutex.Unlock()
+
+				if _, ok := q.queue[user]; ok {
+					user.roomid <- 0
+					close(user.roomid)
+					delete(q.queue, user)
+				}
+			}()
 		}
 	}
 }
 
-func (q *matchQueue) runMatch(timeout time.Duration) {
-	ticker := time.NewTicker(timeout)
+// runMatch runs q.match after each duration.
+func (q *matchQueue) runMatch(every time.Duration) {
+	ticker := time.NewTicker(every)
 	for {
 		<-ticker.C
 		q.match()
-		ticker.Reset(timeout)
+		ticker.Reset(every)
 	}
 }
 
@@ -77,17 +107,14 @@ func (q *matchQueue) match() {
 	// Before matching, lock the clients map and release it after the function
 	// have will finished.
 	q.mutex.Lock()
-	defer func() {
-		q.mutex.Unlock()
-	}()
+	defer q.mutex.Unlock()
 
+	// Below algorithm is a very very simple.  It simply chooses two clients in
+	// turn to match until it meets the end of queue.
+	var client1 *matchService = nil
+	var client2 *matchService = nil
 
-	// Below algorithm is a very very simple.  It simply chooses two clients
-	// in turn to match until it meets the end of queue.
-	var client1 *clientService
-	var client2 *clientService
-
-	for client := range q.clients {
+	for client := range q.queue {
 		if client1 == nil {
 			client1 = client
 		} else if client2 == nil {
@@ -95,23 +122,112 @@ func (q *matchQueue) match() {
 		}
 
 		if client1 != nil && client2 != nil {
-			rs := roomService{}
+			roomService := CreateRoomService(nil)
 
 			var ID uint = 0
-			if err := rs.Create(); err != nil {
-				log.Println(err)
+			if xerr := roomService.Create(&client1.us, &client2.us); xerr.Errno() != 0 {
+				log.Println(xerr)
 			} else {
-				ID = *rs.id
+				ID = roomService.room.ID
 			}
 
-			client1.joinRoom <- ID
-			client2.joinRoom <- ID
+			client1.roomid <- ID
+			client2.roomid <- ID
 
-			delete(q.clients, client1)
-			delete(q.clients, client2)
+			close(client1.roomid)
+			close(client2.roomid)
+
+			delete(q.queue, client1)
+			delete(q.queue, client2)
 
 			client1 = nil
 			client2 = nil
 		}
 	}
+}
+
+type matchService struct {
+	us userService
+
+	// The MatchQueue in which this matchService joined
+	queue *matchQueue
+
+	// A channel receives roomid if there is a match found
+	roomid chan uint
+
+	// MatchHandler handles the room returned from the matchQueue
+	MatchHandler func(resources.RoomResponse)
+}
+
+// A list of current existed matchServiceList with uid as the identity.
+// It can't create two matchServices with the same uid.
+var matchServiceList = make(map[uint]bool)
+
+// The mutex assures that two goroutines doesn't access to matchServiceList at
+// the same time.
+var matchServiceListMutex = sync.Mutex{}
+
+// CreateMatchService creates a matchService struct with a given userService.
+// If there has been already a matchService with the same uid, nil will be
+// returned.
+//
+// @lock: matchServiceList
+//
+// @error: ErrorPermission, ErrorDuplicatedConnection
+//
+// @goroutine: ms.waitForAMatch
+func CreateMatchService(
+	us userService,
+) (*matchService, xyerrors.XyError) {
+	if us.user == nil {
+		return nil, xyerrors.ErrorPermission.New("User must login before")
+	}
+
+	matchServiceListMutex.Lock()
+	defer matchServiceListMutex.Unlock()
+
+	if _, ok := matchServiceList[us.user.ID]; ok {
+		return nil, xyerrors.ErrorDuplicatedConnection.New("Each user has only a slot in matching queue")
+	}
+
+	ms := &matchService{
+		us:           us,
+		queue:        GetMatchQueue(),
+		roomid:       make(chan uint),
+		MatchHandler: func(rr resources.RoomResponse) {},
+	}
+
+	matchServiceList[us.user.ID] = true
+
+	go ms.waitForAMatch()
+
+	return ms, xyerrors.NoError
+}
+
+// Register push this clientService to MatchQueue
+func (ms *matchService) Register() {
+	ms.queue.register <- ms
+}
+
+// Unregister pop this clientService from MatchQueue
+func (ms *matchService) Unregister() {
+	ms.queue.unregister <- ms
+}
+
+// Close deletes the client from existed clients list.  Note that Close doesn't
+// unregister from MatchQueue.
+//
+// @lock: matchServiceList
+func (ms *matchService) Close() {
+	matchServiceListMutex.Lock()
+	defer matchServiceListMutex.Unlock()
+
+	delete(matchServiceList, ms.us.user.ID)
+}
+
+// waitForAMatch waits the joinRoom signals from MatchQueue and handles the
+// room with ms.MatchHandler
+func (ms *matchService) waitForAMatch() {
+	room := resources.RoomResponse{ID: <-ms.roomid}
+	ms.MatchHandler(room)
 }

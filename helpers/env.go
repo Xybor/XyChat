@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"errors"
 	"log"
 	"os"
 
@@ -11,13 +12,13 @@ import (
 func LoadEnv() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln(err)
 	}
 }
 
-// ReadEnv reads an environment variable with a default value if it doesn't
+// ReadEnvDefault reads an environment variable with a default value if it doesn't
 // exist.
-func ReadEnv(key string, _default string) string {
+func ReadEnvDefault(key, _default string) string {
 	value, ok := os.LookupEnv(key)
 	if !ok {
 		return _default
@@ -25,12 +26,22 @@ func ReadEnv(key string, _default string) string {
 	return value
 }
 
-// MustReadEnv reads an environment variable and calls log.Panic if it doesn't
+// ReadEnv reads an environment variable and raise an error if it doesn't
+// exist.
+func ReadEnv(key string) (string, error) {
+	value, ok := os.LookupEnv(key)
+	if !ok {
+		return "", errors.New("non-existed environment variables " + key)
+	}
+	return value, nil
+}
+
+// MustReadEnv reads an environment variable and calls log.Fatal if it doesn't
 // exist.
 func MustReadEnv(key string) string {
 	value, ok := os.LookupEnv(key)
 	if !ok {
-		log.Panic("invalid key " + key)
+		log.Fatalln("non-existed environment variables " + key)
 	}
 
 	return value

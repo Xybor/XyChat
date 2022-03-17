@@ -12,6 +12,12 @@ import (
 	"gorm.io/gorm/logger"
 )
 
+type BaseModel struct {
+	ID        uint `gorm:"primaryKey"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
 var db *gorm.DB
 
 // IntializeDB reads all credentials in environments variable and creates a
@@ -20,29 +26,37 @@ var db *gorm.DB
 func InitializeDB() {
 	var err error
 
-	postgres_host := helpers.MustReadEnv("postgres_host")
-	postgres_user := helpers.MustReadEnv("postgres_user")
-	postgres_dbname := helpers.MustReadEnv("postgres_dbname")
-	postgres_port := helpers.MustReadEnv("postgres_port")
-	postgres_password := helpers.MustReadEnv("postgres_password")
+	var dsn string
 
-	dsn := fmt.Sprintf("host=%s user=%s dbname=%s port=%s sslmode=disable password=%s",
-		postgres_host,
-		postgres_user,
-		postgres_dbname,
-		postgres_port,
-		postgres_password,
-	)
+	dsnEnvVarName, err := helpers.ReadEnv("DSN_NAME")
+
+	if err == nil {
+		dsn = helpers.MustReadEnv(dsnEnvVarName)
+	} else {
+		postgres_host := helpers.MustReadEnv("POSTGRES_HOST")
+		postgres_user := helpers.MustReadEnv("POSTGRES_USER")
+		postgres_dbname := helpers.MustReadEnv("POSTGRES_DBNAME")
+		postgres_port := helpers.MustReadEnv("POSTGRES_PORT")
+		postgres_password := helpers.MustReadEnv("POSTGRES_PASSWORD")
+
+		dsn = fmt.Sprintf("host=%s user=%s dbname=%s port=%s sslmode=disable password=%s",
+			postgres_host,
+			postgres_user,
+			postgres_dbname,
+			postgres_port,
+			postgres_password,
+		)
+	}
 
 	_, err = os.Stat("logs")
 	if os.IsNotExist(err) {
-		os.Mkdir("logs", 0600)
+		os.Mkdir("logs", 0777)
 	}
 
 	out, err := os.OpenFile(
 		"logs/db.log",
 		os.O_CREATE|os.O_APPEND|os.O_WRONLY,
-		0600,
+		0777,
 	)
 
 	if err != nil {
@@ -65,20 +79,20 @@ func InitializeDB() {
 		},
 	)
 	if err != nil {
-		log.Panic(err)
+		log.Panicln(err)
 	}
 
 	sqldb, err := db.DB()
 	if err != nil {
-		log.Panic(err)
+		log.Panicln(err)
 	}
 
 	err = sqldb.Ping()
 	if err != nil {
-		log.Panic(err)
+		log.Panicln(err)
 	}
 
-	fmt.Println("[Xychat] Connecting to database success")
+	log.Println("[Xychat] Connecting to database success")
 }
 
 // Get the current db struct
@@ -94,11 +108,11 @@ func CreateTables(drop_if_exists bool) {
 			&User{},
 			&Room{},
 			&DetailedRoom{},
-			&Chat{},
+			&ChatMessage{},
 		)
 
 		if err != nil {
-			log.Fatal(err)
+			log.Panicln(err)
 		}
 
 		log.Println("[Xychat] Dropped all tables in database")
@@ -108,11 +122,11 @@ func CreateTables(drop_if_exists bool) {
 		&User{},
 		&Room{},
 		&DetailedRoom{},
-		&Chat{},
+		&ChatMessage{},
 	)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Panicln(err)
 	}
 
 	log.Println("[Xychat] Successfully auto-migrate database")

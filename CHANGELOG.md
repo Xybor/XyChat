@@ -1,21 +1,62 @@
 # Change logs
-# Alpha.0.0.4
-+ Modify some code in [services](./services) and [controllers](./controllers).
-+ Move controllers/debug.go to helpers/context/context.go.
-+ Add some GET and PUT APIs in `/api/v1/users/:id/*`.
-+ Add FEATURES.md for listing all APIs and WSes in the application.
-+ Add CHECKLIST.md for listing all must-do tasks before committing.
-+ Add command line option to build the application easily.
-+ Add admin user seeder in command line.
-+ Add many comments.
-+ Change the loading environment variable method.
 
-# Alpha.0.0.3
-+ Add frontend with VueJS
-+ Add matching feature with websocket at `/ws/v1/match`
+# Alpha.0.6
+# Alpha.0.6.3
+- Migrate vuejs frontend to https://github.com/xybor/xyvuechat.
+- Update guidelines.
 
-# Alpha.0.0.2
-+ Add docker container.
+## Alpha.0.6.2
+- Change `ClientMessage` struct to `ChatMessageRequest`.
+- Update specifications in FEATURES.md.
 
-# Alpha.0.0.1
-+ Add three APIs: `/api/v1/[auth|register|profile]`.
+## Alpha.0.6.1
+- Re-design request's parameter reading functions.
+- Change the format of all POST, PUT, DELETE requests from x-www-urlencoded-form to JSON.
+
+# Alpha.0.5
+## Alpha.0.5.4
+- Re-design middlewares, helpers/(api|ws).
+- Change the folder representations to resources.
+- Update FEATURES.md with new version convention.
+
+## Alpha.0.5.3
+- Return user information in auth API.
+- Re-design the error management.
+- Remove ApplyAPIHeader.
+
+## Alpha.0.5.2
+- Use TLS environment variable to dynamically enable HTTPS method.
+- Use environment variable to set admin user.
+- Use XYCHAT environment variable to determine that the application is running
+for what (test, debug or release).
+
+## Alpha.0.5.1
+- Add chat feature with websocket at `/ws/v1/chat`.
+- Allow CORS by using environment variable.
+- Split README.md into many files.
+
+
+
+# Alpha.0.4
+- Modify general machanism in services.
+- Add some GET and PUT APIs in `/api/v1/users/:id/*`.
+- Add FEATURES.md for listing all APIs and WSes in the application.
+- Add CHECKLIST.md for listing all must-do tasks before committing.
+- Add command line options to build the application easily.
+- Add many comments.
+- Change the loading environment variable method.
+- Use the correct exiting way by using `fatal` or `panic`.
+- Now it is possible to deploy on Heroku.
+- Add vendor.
+
+# Alpha.0.3
+
+- Add matching feature with websocket at `/ws/v1/match`
+
+# Alpha.0.2
+
+- Add docker container.
+
+# Alpha.0.1
+
+- Add three APIs: `/api/v1/[auth|register|profile]`.

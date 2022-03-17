@@ -7,8 +7,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"github.com/xybor/xychat/controllers"
-	wshelper "github.com/xybor/xychat/helpers/ws/v1"
+	"github.com/xybor/xychat/helpers"
+	"github.com/xybor/xychat/xyerrors"
 )
 
 var upgrader = &websocket.Upgrader{
@@ -21,29 +21,27 @@ var upgrader = &websocket.Upgrader{
 // connection and sets it as the parameter WebSocket in the context.  If it
 // cannot upgrade to WebSocket connection, a failure response will be sent to
 // client.
-func UpgradeToWebSocket(ctx *gin.Context) {
-	if !ctx.IsWebsocket() {
-		response := wshelper.NewWSError(
-			controllers.ErrorFailedProcess,
-			"websocket connection is required",
-		)
-		ctx.JSON(http.StatusMethodNotAllowed, response)
-		ctx.Abort()
-		return
-	}
+func UpgradeToWebSocket() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		if !ctx.IsWebsocket() {
+			response := helpers.NewErrorResponse(
+				xyerrors.ErrorCannotUpgradeToWebsocket.New("Websocket is not allowed"))
+			ctx.JSON(xyerrors.ErrorCannotUpgradeToWebsocket.StatusCode(), response)
+			ctx.Abort()
+			return
+		}
 
-	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
-	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
-	if err != nil {
-		log.Println(err)
-		response := wshelper.NewWSError(
-			controllers.ErrorFailedProcess,
-			"cannot upgrade to websocket",
-		)
-		ctx.JSON(http.StatusInternalServerError, response)
-		ctx.Abort()
-		return
-	}
+		upgrader.CheckOrigin = func(r *http.Request) bool { return true }
+		conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
+		if err != nil {
+			log.Println(err)
+			response := helpers.NewErrorResponse(
+				xyerrors.ErrorUnknown.New("Can't upgrade to websocket because unknown reason"))
+			ctx.JSON(xyerrors.ErrorUnknown.StatusCode(), response)
+			ctx.Abort()
+			return
+		}
 
-	ctx.Set("WebSocket", conn)
+		ctx.Set("WebSocket", conn)
+	}
 }

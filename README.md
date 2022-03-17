@@ -1,43 +1,19 @@
 # XyChat
-A chat application built with Golang, VueJS, and PostgreSQL.
+A chat application server built with Golang and PostgreSQL. You can find some frontend applications of this server [here](https://github.com/xybor).
 
-# REQUIREMENTS
-+ Go1.16.6
-+ PostgreSQL
+# DEPLOYMENT
+See [DEPLOYMENT.md](./DEPLOYMENT.md).
 
-# INSTALLATION
-+ Create a database in your PostgreSQL.
-+ Create and modify `.env` file (with the same structure as [.env.example](.env.example)). The
-other way is that create environment variables in your machine with the same names as [.env.example](.env.example).
+If you want to enable HTTPS in the application, see [TLS.md](./TLS.md).
 
-# USAGE
-Run the following command in terminal for more detail
-```shell
-$ go run main.go -h
-```
+# FEATURES
+See [FEATURES.md](./FEATURES.md).
 
-## Some examples
-Reset the database
-```shell
-$ go run main.go -reset
-```
+# DESIGN OF THE APPLICATION
+See [DESIGN.md](./DESIGN.md).
 
-Create an admin account
-```shell
-$ go run main.go -admin root:p@ss
-```
+# CHANGE LOGS
+See [CHANGELOG.md](./CHANGELOG.md).
 
-Use values in .env file instead of environment variables
-```shell
-$ go run main.go -dotenv
-```
-
-Run the application
-```shell
-$ go run main.go -run
-```
-
-Then open your browser and access the web at `http://domain:port/ui/`. Example: `http://localhost:1999/ui`.
-
-# DOCKER
-
+# AUTHORS
+<a href="https://github.com/huykingsofm" style="pointer-events: none;" target="_blank"><img src="https://img.shields.io/badge/github-huykingsofm-informational"></a>
